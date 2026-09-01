@@ -11,17 +11,11 @@ The repository contains a two-part documentation system designed to separate ref
 
 ## 2. The Computational Sandbox
 * **The Python FEA Template (`Beam_bending_shear_displacement_PlaneSections.ipynb`):** A practical demonstration of using open-source Python packages (`anaStruct`, `PlaneSections`, and `PyNiteFEA`) to solve structural problems.
-* **The Test Case:** The notebook models a 9-meter steel cantilever beam (300mm x 200mm section) subjected to a linearly varying load. It computes continuous shear, moment, and deflection diagrams, extracting exact nodal results. This serves as seed material for engineers looking to automate routine structural equivalents without losing visibility into the underlying physics.
+* **The Test Case:** The notebook models a 9-meter steel cantilever beam (300mm x 200mm section) subjected to a linearly varying load. It computes continuous shear, moment, and deflection diagrams, extracting exact nodal results. This serves as seed material for engineers looking to automate routine structural equivalents without losing visibility into the underlying physics. It also offers comparisons of the results between different packages. 
 
 ## 3. Standard Workflow
-
 To test this proof-of-concept in a live scenario:
-
 1. **Frame & Model:** Use the Reference Guide to define the problem criticality, load paths, and appropriate idealizations.
-2. **Compute:** Utilize the concepts in the Jupyter Notebook to build a tractable mathematical model and extract internal resultants.
+2. **Compute:** Utilize the concepts in a Jupyter Notebook to build a tractable mathematical model and extract internal resultants.
 3. **Document:** Record the decisions, bounds, and limits in a fresh copy of the Traveller.
 4. **Audit:** Run the final numbers back through the Assumption Ledger in the Traveller to ensure the computed stresses and deflections do not violate the initial linear-elastic or small-deflection assumptions.
-
-
-
-Which aspect of this seed repository should we flesh out next—expanding the Python computational solvers, or building out a checklist for one of the specialized route-outs like fatigue or contact mechanics?
