@@ -74,7 +74,7 @@ Organized by what you are trying to do, not by package taxonomy.
   </tr>
   <tr>
     <td width="50%"><img src="https://www.engineeringskills.com/_next/image?url=%2Fimages%2Fposts%2Fa-pynite-crash-course-open-source-finite-element-modelling-for-structural-engineers%2Fimg1.jpg&w=640&q=75" alt="Pynite Crash Course"></td>
-    <td width="50%"><img src="https://media.licdn.com/dms/image/v2/C5622AQHbyXUDAE5_PQ/feedshare-shrink_1280/feedshare-shrink_1280/0/1678117583415?e=1789603200&v=beta&t=vluiYLRB-46NmHtnbT-BvPTH4SlYwap6ICxaEY4IhfI" alt="3D visualization"></td>
+    <td width="50%"><a href="https://www.linkedin.com/posts/connorferster_opensource-python-structuralengineering-activity-7038535825235607552-_3t_"><img src="https://media.licdn.com/dms/image/v2/C5622AQHbyXUDAE5_PQ/feedshare-shrink_800/feedshare-shrink_800/0/1678117583415?e=2147483647&v=beta&t=nd5-E6mBDJgmUwEk2VeR07TSsQflVsMY8aNzfprwFXs" alt="Pynite 3D visualization (animated) — Connor Ferster on LinkedIn"></a></td>
   </tr>
 </table>
 
