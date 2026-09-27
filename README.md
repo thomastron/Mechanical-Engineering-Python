@@ -1,6 +1,6 @@
 # Welcome to the Mechanical Engineering Seed Repository
 
-This repository serves as a proof-of-concept for a rigorous, modern mechanical engineering workflow. It bridges the gap between structured decision-making, documented assumptions, and Python-based computational analysis. Python packages are introduced in the visual guide: [Python-for-the-Design-Desk](Python-for-the-Design-Desk.md). 
+This repository serves as a proof-of-concept for a rigorous, modern mechanical engineering workflow. It bridges the gap between structured decision-making, documented assumptions, and Python-based computational analysis. Python packages are introduced in this visual guide.
 
 The materials here are designed to prevent the classic engineering trap of silently inheriting flawed assumptions, providing a clear path from problem framing to final sign-off.
 
