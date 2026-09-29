@@ -2,6 +2,9 @@
 
 This repository serves as a proof-of-concept for a rigorous, modern mechanical engineering workflow. It bridges the gap between structured decision-making, documented assumptions, and Python-based computational analysis. Python packages are introduced in this visual guide.
 
+> [!Note:]
+> This repo contains a single example notebook. Load these files in as AI context and point it at a textbook problem!
+
 The materials here are designed to prevent the classic engineering trap of silently inheriting flawed assumptions, providing a clear path from problem framing to final sign-off.
 
 ## 1. The Design & Analysis Framework
