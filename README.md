@@ -2,7 +2,7 @@
 
 This repository serves as a proof-of-concept for a rigorous, modern mechanical engineering workflow. It bridges the gap between structured decision-making, documented assumptions, and Python-based computational analysis. Python packages are introduced in this visual guide.
 
-> [!Note:]
+> [!NOTE]
 > This repo contains a single example notebook. Load these files in as AI context and point it at a textbook problem!
 
 The materials here are designed to prevent the classic engineering trap of silently inheriting flawed assumptions, providing a clear path from problem framing to final sign-off.
@@ -13,8 +13,8 @@ The repository contains a two-part documentation system designed to separate ref
 * **The Project Record (`MECHANICAL-DESIGN-TRAVELLER`):** A blank, copyable template that serves as the official design record for a specific part. It strips out the explanatory text of the main checklist, leaving only the operational checkboxes, the decision trail, the Assumption Ledger audit, and the final sign-off blocks. It is designed to be highly reviewable, requiring explicit documentation of the governing failure mode and margin of safety.
 
 ## 2. The Computational Sandbox
-* **The Python FEA Template (`Beam_bending_shear_displacement_PlaneSections.ipynb`):** A practical demonstration of using open-source Python packages (`anaStruct`, `PlaneSections`, and `PyNiteFEA`) to solve structural problems.
-* **The Test Case:** The notebook models a 9-meter steel cantilever beam (300mm x 200mm section) subjected to a linearly varying load. It computes continuous shear, moment, and deflection diagrams, extracting exact nodal results. This serves as seed material for engineers looking to automate routine structural equivalents without losing visibility into the underlying physics. It also offers comparisons of the results between different packages. 
+* **The Python FEA Template (`Cantilever_Beam_Analysis_Triangular_Load.ipynb`):** A practical demonstration of using the open-source `PlaneSections` package (which solves with `PyNiteFEA` under the hood) to solve a structural problem.
+* **The Test Case:** The notebook models a 9-meter steel cantilever beam (300mm x 200mm section) subjected to a linearly varying load. It computes continuous shear, moment, and deflection diagrams, extracting exact nodal results. This serves as seed material for engineers looking to automate routine structural equivalents without losing visibility into the underlying physics. Every result is checked against the closed-form solution, and a convergence study shows what it costs to approximate the tapered load with constant-load strips when a package can't apply a linearly varying load directly.
 
 ## 3. Standard Workflow
 To test this proof-of-concept in a live scenario:
@@ -22,6 +22,22 @@ To test this proof-of-concept in a live scenario:
 2. **Compute:** Utilize the concepts in a Jupyter Notebook to build a tractable mathematical model and extract internal resultants.
 3. **Document:** Record the decisions, bounds, and limits in a fresh copy of the Traveller.
 4. **Audit:** Run the final numbers back through the Assumption Ledger in the Traveller to ensure the computed stresses and deflections do not violate the initial linear-elastic or small-deflection assumptions.
+
+## 4. Setup
+Tested on Python 3.11.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+`requirements.txt` pins every Python package in the visual map below. GXBeam is a Julia package and is not included. On Linux, `openseespy` also needs the system BLAS and LAPACK libraries (Debian/Ubuntu: `sudo apt install libblas3 liblapack3`).
+
+To run a notebook headless and check that it still passes:
+
+```bash
+MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Cantilever_Beam_Analysis_Triangular_Load.ipynb --inplace
+```
 
 
 # Python for the Design Desk - Visual Map
@@ -39,7 +55,7 @@ Organized by what you are trying to do, not by package taxonomy.
 | Multibody dynamics — Kane's method, Lagrange      | `sympy.physics.mechanics` (PyDy's core)  |
 | Quick beam diagrams, numeric                      | `symbeam`, `planesections`               |
 | Torsion in a shaft (diagram, internal T)          | `Pynite` (`'MX'` loads, `torque_array`)  |
-| 2D frame and truss analysis                       | `anastruct`, `PyNite`                    |
+| 2D frame and truss analysis                       | `anastruct`¹, `PyNite`                   |
 | Cross-section properties, arbitrary shapes        | `sectionproperties`                      |
 | Root-finding, curve fits, ODEs, eigenvalues       | `scipy`                                  |
 | Fatigue cycle counting from a load history        | `wetb.fatigue_tools`                     |
@@ -94,7 +110,7 @@ Organized by what you are trying to do, not by package taxonomy.
   </tr>
 </table>
 
-¹ `anastruct` handles internal hinges natively and its **forces** are exact, but its **hinged deflections are not** — see the gotchas below.
+¹ `anastruct` handles internal hinges natively and its **forces** are exact, but its **hinged deflections are not** — verify any deflection near a hinge independently.
 
 ## PlaneSections [docs](https://github.com/cslotboom/planesections)
 **Use for:** Fast 1D beam analysis specifically tailored for plotting standard shear force and bending moment diagrams (SFD/BMD) for straightforward load cases.
@@ -123,7 +139,7 @@ Organized by what you are trying to do, not by package taxonomy.
   <img src="https://github.com/connorferster/handcalcs/raw/main/docs/images/basic_demo1.gif" alt="Handcalcs basic demo">
 </div>
 
-## uncertainties [docsA](https://github.com/connorferster/handcalcs) [docsB](https://github.com/lmfit/uncertainties)
+## uncertainties [docs](https://github.com/lmfit/uncertainties)
 **Use for:** Propagating dimensional tolerances, material property scatter, and measurement errors through complex engineering formulas automatically.
 
 The following pics are actually from `uncertainty-toolbox`. The following plots are a few of the [visualizations](https://github.com/uncertainty-toolbox/uncertainty-toolbox/blob/main/uncertainty_toolbox/viz.py) provided by Uncertainty Toolbox. See [this example](https://github.com/uncertainty-toolbox/uncertainty-toolbox/blob/main/examples/viz_readme_figures.py) for code to reproduce these plots.
@@ -162,7 +178,7 @@ The following pics are actually from `uncertainty-toolbox`. The following plots 
   </tr>
 </table>
 
-## SymPi (SymPy)
+## SymPy
 **Use for:** Symbolic algebraic derivations, calculus for analytical beam theory, and constructing equations of motion via Kane's or Lagrange's methods for rigid body multibody dynamics.
 
 <div align="center">
@@ -287,14 +303,14 @@ routine gives natural frequencies and mode shapes from `K` and `M`. Use `eigh`, 
 `eig`, on a stress tensor — it guarantees real eigenvalues and orthogonal directions.
 
 ```
-σx=80, τxy=50 MPa   (Shigley Ex 3-4, cell 27 of "Shigley chapter 2 and 3.ipynb")
+σx=80, τxy=50 MPa   (Shigley Ex 3-4)
 → principals [104.03, 0, −24.03] MPa   τmax = 64.03 MPa
 ```
 
 #### `stats.weibull_min` / `norm` / `lognorm` — life scatter and reliability
 
 Weibull is the standard fatigue-life and bearing-life model; `.ppf()` gives B10 / L10 directly. The
-natural continuation of the Shigley Ch. 1 statistical work already done with `norm`.
+natural next step after the normal-distribution statistics in Shigley Ch. 1.
 
 ```
 shape 2.3, scale 1.2e6 → B10 life = 4.511e+05 cycles
