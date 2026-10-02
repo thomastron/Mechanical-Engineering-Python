@@ -1,0 +1,40 @@
+# Python packages for the "Python for the Design Desk" map in README.md.
+# Tested together on Python 3.11: `pip check` is clean, every package imports,
+# and Cantilever_Beam_Analysis_Triangular_Load.ipynb passes all its checks.
+#
+# Not included: GXBeam (a Julia package, not Python).
+# Linux only: openseespy also needs the system BLAS/LAPACK libraries
+#   (Debian/Ubuntu: sudo apt install libblas3 liblapack3)
+
+# Core numerics and plotting
+numpy==2.4.6
+scipy==1.17.1
+pandas==3.0.6
+matplotlib==3.11.2
+
+# Symbolic math (includes sympy.physics.mechanics and continuum_mechanics.beam)
+sympy==1.14.0
+
+# Units, uncertainty, and auditable hand calcs
+pint==0.25.3
+forallpeople==3.0.0
+uncertainties==3.2.3
+handcalcs==1.11.0
+
+# Structural analysis
+# planesections is pinned exactly: the example notebook relies on its 1.4.2 API
+# (PyNiteAnalyzer2D, addLinLoadVertical). See AGENTS.md for its known quirks.
+planesections==1.4.2
+PyNiteFEA==1.0.1
+anastruct==1.7.0
+symbeam==2.1.2
+sectionproperties==3.10.2
+openseespy==3.7.1.2
+
+# Fatigue cycle counting (wetb.fatigue_tools)
+wetb==0.1.33
+
+# Running notebooks, interactively or headless
+jupyterlab==4.6.4
+nbconvert==7.17.1
+ipykernel==7.4.0

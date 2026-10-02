@@ -81,16 +81,20 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
 
 ## Environment and commands
 
-No dependency file is committed. Minimal environment for the example notebook (verified on
-Python 3.11; the notebook's own metadata says 3.13):
+`requirements.txt` pins every Python package in the README map, tested together on Python 3.11
+(the notebook's own metadata says 3.13):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install "planesections==1.4.2" matplotlib nbconvert ipykernel
+pip install -r requirements.txt
 ```
 
-Other packages from the README map (`anastruct`, `sympy`, `scipy`, `pint`, `handcalcs`,
-`uncertainties`, `sectionproperties`, `PyNiteFEA`, …) are installed only when a notebook needs them.
+On Linux, `openseespy` installs but fails to import without the system BLAS/LAPACK libraries
+(`libblas.so.3: cannot open shared object file`). Fix with `apt install libblas3 liblapack3`.
+GXBeam is Julia, not Python, and is not in the file.
+
+If a notebook needs a package that isn't listed, add it to `requirements.txt` with an exact `==`
+pin, then re-run `pip install -r requirements.txt`, `pip check`, and every notebook.
 
 Execute a notebook headless — this is the closest thing to a test run:
 
@@ -103,9 +107,8 @@ It must finish without errors and every closed-form check must print `OK`
 
 ## Known inconsistencies (do not propagate)
 
-- README §2 refers to `Beam_bending_shear_displacement_PlaneSections.ipynb`, and the example
-  notebook refers to a separate "anaStruct notebook". Neither is in the repo. The only notebook is
-  `Cantilever_Beam_Analysis_Triangular_Load.ipynb`, and it uses PlaneSections only.
-- README "Under-used" examples cite `Shigley chapter 2 and 3.ipynb`, which is also not in the repo.
+- The example notebook's title and prose refer to an "anaStruct notebook" and to
+  `Beam_bending_shear_displacement_PlaneSections.ipynb`. Neither is in the repo, and the
+  notebook itself uses PlaneSections only. Its checks are against the closed form, not another package.
 
 When referencing files, check that they exist.
