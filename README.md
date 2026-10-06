@@ -225,7 +225,6 @@ create plots and graphs
 ---
 
 # Gotchas
-
 - `handcalcs` renders pint's **canonical** unit name and ignores the registry formatter, so
   `12 * u.kpsi` prints as `kilopound_force_per_square_inch`. Define short units instead:
   `u.define("ksi = 1000 * pound_force / inch ** 2")` → renders as `ksi`.
@@ -239,6 +238,8 @@ create plots and graphs
 - `forallpeople` 3.0.0 is installed but ships **no unit environments** in this build, and is
   SI-centric. Use `pint` for imperial work.
 
+> [!NOTE:]
+> This is just a starter list. Build this list out for yourself as you run into issues. 
 ---
 
 # For Future Development and Learning
