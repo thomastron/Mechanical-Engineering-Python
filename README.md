@@ -31,7 +31,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins every Python package in the visual map below. GXBeam is a Julia package and is not included. On Linux, `openseespy` also needs the system BLAS and LAPACK libraries (Debian/Ubuntu: `sudo apt install libblas3 liblapack3`).
+`requirements.txt` pins every Python package in the visual map below, with two exceptions: GXBeam is a Julia package, and FEniCSx has no pip wheels (see its section for conda and Docker). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and EasyFEA's mesher, Gmsh, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 
 To run a notebook headless and check that it still passes:
 
@@ -49,6 +49,7 @@ Organized by what you are trying to do, not by package taxonomy.
 | Document a calculation so a reviewer can audit it | `handcalcs`                              |
 | Keep units straight across kpsi and SI            | `pint` (`forallpeople` if SI-only)       |
 | Carry tolerance and scatter through a formula     | `uncertainties`, `scipy.stats`           |
+| Notebook → PDF, or any HTML → PDF / PNG           | `nbconvert`, `playwright`                |
 | Symbolic derivation, algebra, calculus            | `sympy`                                  |
 | Beam by singularity functions, symbolically       | `sympy.physics.continuum_mechanics.beam` |
 | Beam or frame with an **internal hinge**          | `sympy…beam.apply_rotation_hinge`        |
@@ -57,6 +58,10 @@ Organized by what you are trying to do, not by package taxonomy.
 | Torsion in a shaft (diagram, internal T)          | `Pynite` (`'MX'` loads, `torque_array`)  |
 | 2D frame and truss analysis                       | `anastruct`¹, `PyNite`                   |
 | Cross-section properties, arbitrary shapes        | `sectionproperties`                      |
+| Linkage, cam and spur-gear kinematics             | `mechanism`                              |
+| 2D/3D solid FEA without writing the weak form     | `EasyFEA`                                |
+| FEA for any PDE you can write as a weak form      | FEniCSx (`dolfinx`)                      |
+| Full-wave electromagnetic FEA (RF, S-parameters)  | `rapidfem`                               |
 | Root-finding, curve fits, ODEs, eigenvalues       | `scipy`                                  |
 | Fatigue cycle counting from a load history        | `wetb.fatigue_tools`                     |
 | Large-deflection / geometrically exact beams      | GXBeam.jl                                |
@@ -71,6 +76,8 @@ Organized by what you are trying to do, not by package taxonomy.
   </tr>
 </table>
 
+<sub>Images: [GXBeam.jl documentation](https://flow.byu.edu/GXBeam.jl/stable/), © Taylor McDonnell and contributors (BYU FLOW Lab), [MIT License](https://github.com/byuflowlab/GXBeam.jl/blob/master/LICENSE).</sub>
+
 ## Section Properties [docs](https://sectionproperties.readthedocs.io/)
 **Use for:** Calculating complex cross-sectional properties (area, moments of inertia, torsion constant, shear center) for arbitrary custom extrusions or built-up shapes.
 
@@ -83,6 +90,8 @@ Organized by what you are trying to do, not by package taxonomy.
     <td width="50%"><img src="https://sectionproperties.readthedocs.io/en/stable/_images/examples_advanced_advanced_plot_10_0.svg" alt="Advanced plot"></td>
   </tr>
 </table>
+
+<sub>Images: [sectionproperties documentation](https://sectionproperties.readthedocs.io/), © Robbie van Leeuwen, [MIT License](https://github.com/robbievanleeuwen/section-properties/blob/master/LICENSE).</sub>
 
 ## Pynite 3D truss FEA [docs](https://github.com/jwock82/pynite)
 **Use for:** Lightweight 3D finite element analysis to rapidly evaluate internal shear, bending moments, and deflections in frames, trusses, and structural beam assemblies.
@@ -97,6 +106,8 @@ Organized by what you are trying to do, not by package taxonomy.
   </tr>
 </table>
 
+<sub>Logo: [Pynite documentation](https://pynite.readthedocs.io/), © D. Craig Brinck, [MIT License](https://github.com/JWock82/Pynite/blob/main/LICENSE). Left: from [*A Pynite Crash Course*](https://www.engineeringskills.com/posts/a-pynite-crash-course-open-source-finite-element-modelling-for-structural-engineers) by Seán Carroll, © EngineeringSkills.com. Right: animation from [Connor Ferster's LinkedIn post](https://www.linkedin.com/posts/connorferster_opensource-python-structuralengineering-activity-7038535825235607552-_3t_), © Connor Ferster.</sub>
+
 ## Anastruct
 **Use for:** Quick 2D structural analysis of complex frames and trusses to map bending moments, shear forces, and axial loads.
 
@@ -109,6 +120,8 @@ Organized by what you are trying to do, not by package taxonomy.
     <td colspan="2" align="center"><img src="https://anastruct.readthedocs.io/en/latest/_images/heart.png" alt="Heart truss" width="50%"></td>
   </tr>
 </table>
+
+<sub>Images: [anaStruct documentation](https://anastruct.readthedocs.io/), © Ritchie Vink and anaStruct contributors, [LGPL-3.0](https://github.com/anastruct/anaStruct/blob/master/LICENSE.txt).</sub>
 
 ¹ `anastruct` handles internal hinges natively and its **forces** are exact, but its **hinged deflections are not** — verify any deflection near a hinge independently.
 
@@ -125,6 +138,8 @@ Organized by what you are trying to do, not by package taxonomy.
   </tr>
 </table>
 
+<sub>Images: [planesections README](https://github.com/cslotboom/planesections), © cslotboom, [Apache-2.0](https://github.com/cslotboom/planesections/blob/main/LICENSE).</sub>
+
 ## SymBeam [docs](https://github.com/amcc1996/symbeam)
 **Use for:** Extracting exact symbolic, analytical solutions (algebraic equations) for beam bending, shear, and internal moments. A pedagogical package for beam bending.
 
@@ -132,12 +147,16 @@ Organized by what you are trying to do, not by package taxonomy.
   <img src="https://gist.githubusercontent.com/amcc1996/ca430a30adc69b1c1616cd949196466a/raw/00c07608d21e2f692e91032e82094f2f0d7d8931/example_readme.svg" alt="SymBeam Example">
 </div>
 
+<sub>Image: [SymBeam README](https://github.com/amcc1996/symbeam), © 2020 António Carneiro, [MIT License](https://github.com/amcc1996/symbeam/blob/master/LICENSE.txt).</sub>
+
 ## handcalcs [documentation](https://github.com/connorferster/handcalcs)
 **Use for:** Automatically converting Python variables and math into rendered LaTeX step-by-step equations, producing readable, auditable "hand calculations" for design reports.
 
 <div align="center">
   <img src="https://github.com/connorferster/handcalcs/raw/main/docs/images/basic_demo1.gif" alt="Handcalcs basic demo">
 </div>
+
+<sub>Image: [handcalcs README](https://github.com/connorferster/handcalcs), © Connor Ferster, [Apache-2.0](https://github.com/connorferster/handcalcs/blob/main/LICENSE).</sub>
 
 ## uncertainties [docs](https://github.com/lmfit/uncertainties)
 **Use for:** Propagating dimensional tolerances, material property scatter, and measurement errors through complex engineering formulas automatically.
@@ -151,6 +170,8 @@ The following pics are actually from `uncertainty-toolbox`. The following plots 
     <td width="33%"><strong>Well calibrated</strong><br><br><img src="https://raw.githubusercontent.com/uncertainty-toolbox/uncertainty-toolbox/master/docs/images/row_3.svg" alt="Well calibrated"></td>
   </tr>
 </table>
+
+<sub>Images: [Uncertainty Toolbox](https://github.com/uncertainty-toolbox/uncertainty-toolbox), © 2020 uncertainty-toolbox, [MIT License](https://github.com/uncertainty-toolbox/uncertainty-toolbox/blob/main/LICENSE).</sub>
 
 ## OpenSeesPy [documentation](https://openseespydoc.readthedocs.io/en/stable/index.html)
 **Use for:** Advanced nonlinear structural and geotechnical finite element simulations, highly applicable to seismic response, plastic hinge formation, and complex material models.
@@ -177,6 +198,72 @@ The following pics are actually from `uncertainty-toolbox`. The following plots 
     <td><img src="https://openseespydoc.readthedocs.io/en/stable/_images/demo_cantilever_3el_3d_T.png" alt="Torsion"></td>
   </tr>
 </table>
+
+<sub>Images: [OpenSeesPy documentation](https://openseespydoc.readthedocs.io/), © Minjie Zhu. [OpenSeesPy license](https://github.com/zhuminjie/OpenSeesPyDoc/blob/master/LICENSE): free for research, education and internal use; commercial redistribution needs a license.</sub>
+
+## Choosing an FE tool
+
+The FE packages in this map cover very different ground. Roughly from least setup to most:
+
+| Tool | What it models | Physics | You supply | Install on Windows |
+|---|---|---|---|---|
+| PlaneSections | 1D beams | Linear statics, SFD/BMD | Supports and loads | pip |
+| anastruct | 2D frames and trusses | Statics, mainly linear | Nodes, elements, loads | pip |
+| Pynite | 3D frames, plates | Linear and P-Δ statics | Nodes, members, loads | pip |
+| sectionproperties | 2D cross-sections | Section properties, stress over the section | Section geometry | pip |
+| OpenSeesPy | Frames and continua | Nonlinear static and dynamic, seismic | Elements, materials, analysis steps | pip |
+| EasyFEA | 2D/3D solids, meshed with Gmsh | Elasticity, hyperelasticity, plasticity, contact, phase-field fracture, thermal, beams | Geometry, model, boundary conditions | pip |
+| FEniCSx | 1D/2D/3D, any mesh | Any PDE you can write as a weak form | The variational formulation | conda, Docker or WSL |
+| RapidFEM | 3D, built-in mesher | Full-wave Maxwell (RF and microwave) | Geometry, materials, ports | pip |
+
+## EasyFEA [docs](https://easyfea.readthedocs.io/en/stable/)
+**Use for:** 2D and 3D solid-mechanics FEA without writing the variational formulation yourself: linear elasticity (static, dynamic, homogenisation), hyperelasticity, small-strain plasticity and viscoelasticity, frictionless contact, phase-field fracture, thermal, and Euler-Bernoulli or Timoshenko beams. You mesh with Gmsh through EasyFEA's geometry classes, pick a model, apply boundary conditions and solve. Results plot with Matplotlib or PyVista.
+
+**Where it fits:** the step up from frame solvers to real 2D and 3D stress fields, short of the weak-form work FEniCSx asks for, but limited to the physics it ships. The project calls itself emerging. GPL-3.0, from Université Gustave Eiffel.
+
+**Checked:** `pip install "EasyFEA[viz]"` (7.0.0, which pulls in Gmsh and PyVista). A 2 m steel cantilever, 50 × 50 mm, with a 1 kN tip load deflected 25.600 mm, matching PL³/3EI to 2 × 10⁻¹¹.
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://easyfea.readthedocs.io/en/stable/_images/EasyFEA_banner.jpg" alt="EasyFEA banner" width="400"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="https://easyfea.readthedocs.io/en/stable/_images/sphx_glr_PlateWithHole_001.gif" alt="Phase-field fracture: plate with a hole"></td>
+    <td width="50%"><img src="https://easyfea.readthedocs.io/en/stable/_images/sphx_glr_Hyperelas4_002.gif" alt="Hyperelasticity example"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="https://easyfea.readthedocs.io/en/stable/_images/sphx_glr_Contact3_001.gif" alt="Contact example" width="50%"></td>
+  </tr>
+</table>
+
+<sub>Images: [EasyFEA documentation](https://easyfea.readthedocs.io/en/stable/) gallery, © Université Gustave Eiffel and INRIA (Matthieu Noel), [GPL-3.0](https://github.com/matnoel/EasyFEA/blob/main/LICENSE.txt).</sub>
+
+## FEniCSx [tutorial](https://jsdokken.com/dolfinx-tutorial/) [docs](https://docs.fenicsproject.org/)
+**Use for:** FEA of any physics you can write as a weak form: elasticity, hyperelasticity, heat transfer, Navier-Stokes, Helmholtz and electromagnetics. You state the variational problem in near-mathematical notation (UFL), and FEniCSx generates and compiles the element code. It runs in parallel with MPI, from a laptop to a cluster.
+
+**Where it fits:** the most general option here, and the most work, because you derive the weak form yourself. Reach for EasyFEA when the physics is standard solid mechanics, and for FEniCSx when it isn't: multiphysics, custom constitutive laws, or magnetostatics. The electromagnetics example below is an iron cylinder with copper wires wound around it, solved for the magnetic vector potential A_z and the magnetic field B.
+
+**Install:** no pip wheels for Windows. Use conda-forge (`fenics-dolfinx`), the official Docker images (`dolfinx/dolfinx`, `dolfinx/lab`), or Ubuntu's FEniCS PPA, which on Windows means WSL or Docker. LGPL-3.0.
+
+<table>
+  <tr>
+    <td width="50%"><img src="https://jsdokken.com/dolfinx-tutorial/_images/wire.png" alt="Electromagnetics example: iron cylinder with copper wires, in cross-section"></td>
+    <td width="50%"><img src="assets/fenicsx-em-magnetic-potential-Az.png" alt="Magnetic vector potential A_z"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/fenicsx-em-magnetic-field-B.jpg" alt="Magnetic field B, as glyphs over the mesh"></td>
+    <td><img src="https://jsdokken.com/dolfinx-tutorial/_images/deformation.gif" alt="Hyperelastic beam deforming"></td>
+  </tr>
+</table>
+
+<sub>Images: [*The FEniCSx tutorial*](https://jsdokken.com/dolfinx-tutorial/) by Jørgen S. Dokken, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Top row and bottom left: the [Electromagnetics example](https://jsdokken.com/dolfinx-tutorial/chapter3/em.html); the A_z and B images were rendered from its interactive plots and cropped. Bottom right: the [Hyperelasticity example](https://jsdokken.com/dolfinx-tutorial/chapter2/hyperelasticity.html), unchanged.</sub>
+
+## RapidFEM [site](https://fem.rapidpassives.org/) [repo](https://github.com/milanofthe/rapidfem)
+**Use for:** Full-wave 3D electromagnetic FEA, in the frequency domain (Nédélec edge elements) and the time domain (DGTD): waveguides, filters, transmission lines, antennas and on-chip RF passives. It returns S-parameters (Touchstone), eigenmodes and far-field patterns. The core is Rust with a Python API, and prebuilt Windows wheels mean `pip install rapidfem` needs no compiler. `rapidfem[ui]` adds a local editor and 3D viewer, and the site runs a browser notebook.
+
+**Where it fits:** RF and microwave work. Its README describes no magnetostatic or low-frequency eddy-current solver, so coils, iron cores and motors are better served by a FEniCSx magnetostatics model like the one above. AGPL-3.0, with commercial terms available. A young, fast-moving project that began as a Rust port of EMerge.
+
+**Checked:** 0.24.0. A 30 mm length of WR-90 waveguide at 8, 10 and 12 GHz gave |S₁₁| = 0.0000 and |S₂₁| = 1.0000, and an S₂₁ phase within 0.005° of TE₁₀ theory (−βL), after a constant 180° from port 2's polarity convention. The solve took under 2 s.
 
 ## SymPy
 **Use for:** Symbolic algebraic derivations, calculus for analytical beam theory, and constructing equations of motion via Kane's or Lagrange's methods for rigid body multibody dynamics.
@@ -210,6 +297,26 @@ The following pics are actually from `uncertainty-toolbox`. The following plots 
   </tr>
 </table>
 
+<sub>Banner, top right and bottom row: [SymPy documentation](https://docs.sympy.org/), © SymPy Development Team, [BSD-3-Clause](https://github.com/sympy/sympy/blob/master/LICENSE). Top left: from Lee Phillips, [*Doing symbolic math with SymPy*](https://lwn.net/Articles/840986/), LWN.net, 2020, © Eklektix, Inc. Middle left: from a Medium article; original source not identified. Middle right: thumbnail of [*Robotics 2: Installation of Sympy*](https://www.youtube.com/watch?v=1SQ4-k6wr3Y) by Mikko De Torres, YouTube.</sub>
+
+## mechanism [docs](https://github.com/gabemorris12/mechanism)
+**Use for:** Planar linkage kinematics: position, velocity and acceleration of four-bars, slider-cranks, engines and multi-loop linkages, from vector loop equations you write once. It also designs cam profiles (uniform, harmonic and cycloidal motion, SVAJ diagrams, roller and flat-faced followers, pressure angle) and involute spur gears with AGMA proportions. It animates with Matplotlib and exports cam and gear coordinates for SolidWorks.
+
+**Checked:** 1.1.10. A four-bar at a 60° crank angle matched the closed-form position, velocity and acceleration to 10⁻¹¹. A 60-tooth, 32-pitch gear gave d = 1.875 in, addendum 1/P, dedendum 1.25/P and base radius r cos 20°.
+
+<table>
+  <tr>
+    <td width="50%"><img src="https://github.com/gabemorris12/mechanism/raw/master/images/fivebarlinkage.gif" alt="Five-bar linkage animation"></td>
+    <td width="50%"><img src="https://github.com/gabemorris12/mechanism/raw/master/images/cam2.gif" alt="Cycloidal cam and follower animation"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/gabemorris12/mechanism/raw/master/images/svaj.png" alt="SVAJ diagram for cycloidal motion"></td>
+    <td><img src="https://github.com/gabemorris12/mechanism/raw/master/images/gear60.PNG" alt="Involute spur gear tooth profile"></td>
+  </tr>
+</table>
+
+<sub>Images: [mechanism README](https://github.com/gabemorris12/mechanism), © 2021 Gabriel Nix Morris, [MIT License](https://github.com/gabemorris12/mechanism/blob/master/license.txt).</sub>
+
 ## Numpy
 MATLAB alternative core. NumPy is the fundamental package for scientific computing in Python. It is a Python library that provides a multidimensional array object, various derived objects (such as masked arrays and matrices), and an assortment of routines for fast operations on arrays, including mathematical, logical, shape manipulation, sorting, selecting, I/O, discrete Fourier transforms, basic linear algebra, basic statistical operations, random simulation and much more.
 
@@ -220,7 +327,37 @@ SciPy is a collection of mathematical algorithms and convenience functions built
 Import and write data from/to Excel, csv, json. Structure, access and manipulate data efficiently
 
 ## Matplotlib
-create plots and graphs
+create plots and graphs. Create diagrams - even from hand sketch inputs. This can be used to make FREE BODY DIAGRAMS!
+
+## nbconvert [docs](https://nbconvert.readthedocs.io/)
+**Use for:** Turning a finished notebook into a PDF, HTML or LaTeX record, with the cell outputs (results, tables, figures) printed in place.
+
+There are two routes to PDF, and both keep the outputs:
+
+| Route | Command | Verdict |
+|---|---|---|
+| LaTeX (needs a TeX install such as MiKTeX or TeX Live, plus Pandoc) | `jupyter nbconvert --to pdf "X.ipynb"` | **Use this to print.** Wraps long code and output lines, so nothing is lost, and typesets the math properly |
+| Browser, via Playwright | `jupyter nbconvert --to webpdf "X.ipynb"` | Looks like the notebook on screen, but **cuts off anything wider than the page**. On Windows, see the gotcha below |
+
+Useful flags: `--no-input` (outputs and markdown only, a clean calc report), `--output-dir DIR`, and `--execute` to re-run the notebook first.
+
+**Bigger paper (LaTeX route).** nbconvert's LaTeX template sets the page size in a single block, `margins`, and defaults to letter. A template that overrides only that block gives Tabloid (11 × 17 in). Save it as `tabloid.tex.j2` next to the notebook:
+
+```latex
+((*- extends 'index.tex.j2' -*))
+((* block margins *))
+\geometry{verbose,paperwidth=11in,paperheight=17in,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+((* endblock margins *))
+```
+
+Then add `--template-file tabloid.tex.j2` to the command. Swap the two sizes for Ledger (17 × 11 in, landscape). In one test, a notebook that ran to 22 letter pages came to 13 on Tabloid. Ledger saves no pages, because it has the same 9 in of usable height as letter, but long lines and wide tables stop wrapping.
+
+## Playwright [docs](https://playwright.dev/python/)
+**Use for:** Driving a real browser (Chromium, Firefox or WebKit) from Python: open pages, click, type, read, take screenshots, print to PDF. Its home turf is testing websites. On a design desk it earns its place as an **HTML → PDF / PNG engine**, for a styled pandas table, an HTML calc sheet, or a whole notebook through `nbconvert --to webpdf`.
+
+Install with `pip install playwright`, or `pip install "nbconvert[webpdf]"` to get it alongside nbconvert's webpdf exporter. Then run `python -m playwright install chromium`, which downloads Playwright's own browser build, matched to its version. That's several hundred MB, stored outside the project folder. Re-run it after upgrading Playwright.
+
+The fastest way to learn the API is `codegen`. It opens a browser and writes the Python as you click: `python -m playwright codegen --target=python https://example.com`.
 
 ---
 
@@ -237,9 +374,32 @@ create plots and graphs
   names, where handcalcs turns them into real math — never in the prose beside them.
 - `forallpeople` 3.0.0 is installed but ships **no unit environments** in this build, and is
   SI-centric. Use `pint` for imperial work.
+- **`nbconvert --to webpdf` fails on Windows** with a bare `NotImplementedError` from
+  `asyncio … _make_subprocess_transport`. nbconvert's command line switches asyncio to the
+  **Selector** event loop on Windows, and Playwright needs the **Proactor** loop to launch its browser.
+  It's an nbconvert bug, not a broken install. This one-liner turns the switch off and is otherwise
+  the normal command line (checked with nbconvert 7.17.1 and Playwright 1.63):
+  `python -c "import asyncio, nbconvert.nbconvertapp as a; asyncio.set_event_loop_policy = lambda p: None; a.main()" --to webpdf "X.ipynb"`
+- **Playwright inside a Jupyter notebook fails the same way on Windows,** because ipykernel makes the
+  same switch, and the sync API refuses to run inside the kernel's loop anyway. Run the async API on a
+  fresh Proactor loop in a worker thread. Plain `.py` scripts need neither fix.
+  ```python
+  import asyncio, concurrent.futures
 
-> [!NOTE:]
-> This is just a starter list. Build this list out for yourself as you run into issues. 
+  def run_playwright(coro_fn, *args):
+      def runner():
+          loop = asyncio.ProactorEventLoop()
+          try:
+              return loop.run_until_complete(coro_fn(*args))
+          finally:
+              loop.close()
+      with concurrent.futures.ThreadPoolExecutor(1) as pool:
+          return pool.submit(runner).result()
+  ```
+
+> [!NOTE]
+> This is just a starter list. Build this list out for yourself as you run into issues.
+
 ---
 
 # For Future Development and Learning

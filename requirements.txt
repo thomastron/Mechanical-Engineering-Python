@@ -2,9 +2,11 @@
 # Tested together on Python 3.11: `pip check` is clean, every package imports,
 # and Cantilever_Beam_Analysis_Triangular_Load.ipynb passes all its checks.
 #
-# Not included: GXBeam (a Julia package, not Python).
-# Linux only: openseespy also needs the system BLAS/LAPACK libraries
-#   (Debian/Ubuntu: sudo apt install libblas3 liblapack3)
+# Not included: GXBeam (a Julia package, not Python) and FEniCSx (no pip wheels;
+#   use conda-forge fenics-dolfinx or the dolfinx/dolfinx Docker image).
+# Linux only: openseespy also needs the system BLAS/LAPACK libraries, and gmsh
+#   (pulled in by EasyFEA) needs libGLU and libXft
+#   (Debian/Ubuntu: sudo apt install libblas3 liblapack3 libglu1-mesa libxft2)
 
 # Core numerics and plotting
 numpy==2.4.6
@@ -31,6 +33,13 @@ symbeam==2.1.2
 sectionproperties==3.10.2
 openseespy==3.7.1.2
 
+# Solid-mechanics and electromagnetic FEA ([viz] adds PyVista; gmsh comes with EasyFEA)
+EasyFEA[viz]==7.0.0
+rapidfem==0.24.0
+
+# Linkage, cam and spur-gear kinematics
+mechanism==1.1.10
+
 # Fatigue cycle counting (wetb.fatigue_tools)
 wetb==0.1.33
 
@@ -38,3 +47,7 @@ wetb==0.1.33
 jupyterlab==4.6.4
 nbconvert==7.17.1
 ipykernel==7.4.0
+
+# HTML -> PDF/PNG, and nbconvert --to webpdf. Needs a browser afterwards:
+#   python -m playwright install chromium
+playwright==1.63.0

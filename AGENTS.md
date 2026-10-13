@@ -19,7 +19,7 @@ in a traveller.
 | `MECHANICAL-DESIGN-TRAVELLER__20260816-0931.md` | Blank per-part design record template. | **Template — never fill in place.** Copy it. |
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
-| `assets/` | Images referenced by notebooks. `assets/temp` is a placeholder. | — |
+| `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
 
 The `__YYYYMMDD-HHMM` suffix on the two Markdown documents **is their revision identifier**. The
 traveller hard-links to the checklist by filename and heading anchor (`...CHECKLIST__20260816-0939.md#24-triage-gate-...`).
@@ -91,7 +91,10 @@ pip install -r requirements.txt
 
 On Linux, `openseespy` installs but fails to import without the system BLAS/LAPACK libraries
 (`libblas.so.3: cannot open shared object file`). Fix with `apt install libblas3 liblapack3`.
-GXBeam is Julia, not Python, and is not in the file.
+Likewise `gmsh`, which EasyFEA imports, needs `apt install libglu1-mesa libxft2`
+(`libGLU.so.1` / `libXft.so.2: cannot open shared object file`).
+GXBeam is Julia, not Python, and is not in the file. Neither is FEniCSx, which has no pip
+wheels (conda-forge `fenics-dolfinx` or the `dolfinx/dolfinx` Docker image).
 
 If a notebook needs a package that isn't listed, add it to `requirements.txt` with an exact `==`
 pin, then re-run `pip install -r requirements.txt`, `pip check`, and every notebook.
