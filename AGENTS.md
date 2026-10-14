@@ -20,6 +20,7 @@ in a traveller.
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
 | `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
+| `LICENSE` | MIT, for the repository's own documents and code. Third-party images keep their own licenses (see the README's License section). | Don't change without being asked. |
 
 The `__YYYYMMDD-HHMM` suffix on the two Markdown documents **is their revision identifier**. The
 traveller hard-links to the checklist by filename and heading anchor (`...CHECKLIST__20260816-0939.md#24-triage-gate-...`).

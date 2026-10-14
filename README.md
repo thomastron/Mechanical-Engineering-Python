@@ -483,3 +483,11 @@ natural next step after the normal-distribution statistics in Shigley Ch. 1.
 ```
 shape 2.3, scale 1.2e6 → B10 life = 4.511e+05 cycles
 ```
+
+---
+
+# License
+
+MIT, for the documents and code written for this repository. See [LICENSE](LICENSE).
+
+Images from other sources keep their own licenses, credited under each one above. The problem figure in `assets/cantileverBeam.jpg` comes from Hibbeler's *Mechanics of Materials* and is not covered by the MIT license.
