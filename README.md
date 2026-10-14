@@ -1,27 +1,32 @@
-# Welcome to the Mechanical Engineering Seed Repository
+# Mechanical Design Workflow
 
-This repository serves as a proof-of-concept for a rigorous, modern mechanical engineering workflow. It bridges the gap between structured decision-making, documented assumptions, and Python-based computational analysis. Python packages are introduced in this visual guide.
+A design checklist, a design-record template, and a worked Python FEA example checked against the closed-form solution.
 
-> [!NOTE]
-> This repo contains a single example notebook. Load these files in as AI context and point it at a textbook problem!
+This is a proof of concept. It ties together three things: a structured way to make design decisions, a written record of every assumption, and analysis in Python. The point is to keep an analysis from quietly inheriting a bad assumption, and to give a clear path from framing the problem to sign-off.
 
-The materials here are designed to prevent the classic engineering trap of silently inheriting flawed assumptions, providing a clear path from problem framing to final sign-off.
+There is one worked example so far. The second half of this page is a visual map of Python packages for design work.
 
-## 1. The Design & Analysis Framework
-The repository contains a two-part documentation system designed to separate reference material from live project work.
-* **The Reference Guide (`MECHANICAL-DESIGN-CHECKLIST`):** A dense, navigable decision tree covering the 80% common case of mechanical design: static loading, linear-elastic response, and standard strength/deflection limits. Rather than attempting to cover everything poorly, it deliberately detects and routes out specialized regimes like fatigue, fracture, and creep for separate analysis. Its core engine is the Assumption Ledger, which forces analysts to explicitly record the idealizations (e.g., Euler-Bernoulli vs. Timoshenko, linear-elasticity) that govern their mathematical models.
-* **The Project Record (`MECHANICAL-DESIGN-TRAVELLER`):** A blank, copyable template that serves as the official design record for a specific part. It strips out the explanatory text of the main checklist, leaving only the operational checkboxes, the decision trail, the Assumption Ledger audit, and the final sign-off blocks. It is designed to be highly reviewable, requiring explicit documentation of the governing failure mode and margin of safety.
+## 1. The design and analysis framework
+There are two documents. One is reference material. The other is the working record for a part.
 
-## 2. The Computational Sandbox
-* **The Python FEA Template (`Cantilever_Beam_Analysis_Triangular_Load.ipynb`):** A practical demonstration of using the open-source `PlaneSections` package (which solves with `PyNiteFEA` under the hood) to solve a structural problem.
-* **The Test Case:** The notebook models a 9-meter steel cantilever beam (300mm x 200mm section) subjected to a linearly varying load. It computes continuous shear, moment, and deflection diagrams, extracting exact nodal results. This serves as seed material for engineers looking to automate routine structural equivalents without losing visibility into the underlying physics. Every result is checked against the closed-form solution, and a convergence study shows what it costs to approximate the tapered load with constant-load strips when a package can't apply a linearly varying load directly.
+* **[The checklist](MECHANICAL-DESIGN-CHECKLIST__20260816-0939.md)** is a decision tree for the common 80% of mechanical design: static loads, linear-elastic response, and standard strength and deflection limits. It is dense. A decision map and a table of contents help you find your place. It doesn't try to cover everything. A triage gate screens for nine specialized regimes, including fatigue, fracture and creep, and routes any that apply out for separate analysis. The key piece is the Assumption Ledger. Every idealization the math depends on, such as Euler-Bernoulli vs. Timoshenko or linear elasticity, gets written down there.
+* **[The traveller](MECHANICAL-DESIGN-TRAVELLER__20260816-0931.md)** is a blank design-record template. You copy it for each part. It drops the checklist's explanations and keeps the checkboxes, the decision trail, the Assumption Ledger audit, and the sign-off blocks. It is built for review: it makes you state the governing failure mode and the margin of safety.
 
-## 3. Standard Workflow
-To test this proof-of-concept in a live scenario:
-1. **Frame & Model:** Use the Reference Guide to define the problem criticality, load paths, and appropriate idealizations.
-2. **Compute:** Utilize the concepts in a Jupyter Notebook to build a tractable mathematical model and extract internal resultants.
-3. **Document:** Record the decisions, bounds, and limits in a fresh copy of the Traveller.
-4. **Audit:** Run the final numbers back through the Assumption Ledger in the Traveller to ensure the computed stresses and deflections do not violate the initial linear-elastic or small-deflection assumptions.
+## 2. The worked example
+**[`Cantilever_Beam_Analysis_Triangular_Load.ipynb`](Cantilever_Beam_Analysis_Triangular_Load.ipynb)** solves a beam problem with the open-source PlaneSections package, which uses PyNiteFEA as its solver.
+
+The beam is a 9 m steel cantilever with a 300 × 200 mm section. The load tapers linearly from 270 N/m at the root to zero at the tip. The notebook draws the shear, moment and deflection diagrams and reads exact values at the nodes. Every result is checked against the closed-form solution. The root reaction (1215 N), root moment (3645 N·m) and tip deflection (0.656 mm) all match.
+
+Some packages can't apply a linearly varying load, so the tapered load has to be split into constant-load strips. A convergence study shows what that costs. Doubling the number of strips quarters the error in the root moment, and 72 strips still leave it 0.0096% off.
+
+It's a starting point for automating routine structural calcs without losing sight of the physics.
+
+## 3. Standard workflow
+To try this on a real problem:
+1. **Frame and model.** Use the checklist to set the problem's criticality, the load paths, and the right idealizations.
+2. **Compute.** Build a tractable model in a Jupyter notebook and extract the internal resultants.
+3. **Document.** Record the decisions, bounds and limits in a fresh copy of the traveller.
+4. **Audit.** Run the final numbers back through the traveller's Assumption Ledger. Check that the computed stresses and deflections don't break the linear-elastic or small-deflection assumptions you started with.
 
 ## 4. Setup
 Tested on Python 3.11.
@@ -39,6 +44,8 @@ To run a notebook headless and check that it still passes:
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Cantilever_Beam_Analysis_Triangular_Load.ipynb --inplace
 ```
 
+## 5. Using it with an AI assistant
+Load these files into an AI assistant as context and point it at a textbook problem. [AGENTS.md](AGENTS.md) holds the rules it follows here, and [CLAUDE.md](CLAUDE.md) points Claude Code to the same file. The rules: frame the problem with the checklist before computing, route out any specialized regime, check every result independently, audit the Assumption Ledger against the answer, and leave sign-off to the engineer.
 
 # Python for the Design Desk - Visual Map
 
