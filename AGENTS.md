@@ -78,6 +78,9 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
 - **handcalcs**: no underscores or `^` in comments inside `%%render` cells (KaTeX in VS Code
   fails); define short pint units (`ksi`) or it prints canonical names; keep `%%render` cells to
   plain assignments.
+- **CALFEM** (`calfem-python`, imported as `calfem`) numbers DOFs from 1 in `edof` and in the `bc`
+  list for `solveq`. A 0-based list runs without error and fixes the wrong DOFs, so check the
+  reactions against statics. Its `eigen` calls `eig`; use `eigh` instead (next item).
 - Use `scipy.linalg.eigh`, never `eig`, on stress tensors and K/M pairs.
 
 ## Environment and commands
@@ -92,7 +95,7 @@ pip install -r requirements.txt
 
 On Linux, `openseespy` installs but fails to import without the system BLAS/LAPACK libraries
 (`libblas.so.3: cannot open shared object file`). Fix with `apt install libblas3 liblapack3`.
-Likewise `gmsh`, which EasyFEA imports, needs `apt install libglu1-mesa libxft2`
+Likewise `gmsh`, which EasyFEA and CALFEM use for meshing, needs `apt install libglu1-mesa libxft2`
 (`libGLU.so.1` / `libXft.so.2: cannot open shared object file`).
 GXBeam is Julia, not Python, and is not in the file. Neither is FEniCSx, which has no pip
 wheels (conda-forge `fenics-dolfinx` or the `dolfinx/dolfinx` Docker image).

@@ -5,7 +5,7 @@
 # Not included: GXBeam (a Julia package, not Python) and FEniCSx (no pip wheels;
 #   use conda-forge fenics-dolfinx or the dolfinx/dolfinx Docker image).
 # Linux only: openseespy also needs the system BLAS/LAPACK libraries, and gmsh
-#   (pulled in by EasyFEA) needs libGLU and libXft
+#   (pulled in by EasyFEA and calfem-python) needs libGLU and libXft
 #   (Debian/Ubuntu: sudo apt install libblas3 liblapack3 libglu1-mesa libxft2)
 
 # Core numerics and plotting
@@ -32,6 +32,9 @@ anastruct==1.7.0
 symbeam==2.1.2
 sectionproperties==3.10.2
 openseespy==3.7.1.2
+
+# Glass-box FEM: you assemble the global stiffness matrix yourself (imports as calfem)
+calfem-python==3.6.16
 
 # Solid-mechanics and electromagnetic FEA ([viz] adds PyVista; gmsh comes with EasyFEA)
 EasyFEA[viz]==7.0.0
