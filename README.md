@@ -36,7 +36,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins every Python package in the visual map below, with two exceptions: GXBeam is a Julia package, and FEniCSx has no pip wheels (see its section for conda and Docker). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and EasyFEA's mesher, Gmsh, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
+`requirements.txt` pins every Python package in the visual map below, with two exceptions: GXBeam is a Julia package, and FEniCSx has no pip wheels (see its section for conda and Docker). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 
 To run a notebook headless and check that it still passes:
 
@@ -66,6 +66,7 @@ Organized by what you are trying to do, not by package taxonomy.
 | 2D frame and truss analysis                       | `anastruct`¹, `PyNite`                   |
 | Cross-section properties, arbitrary shapes        | `sectionproperties`                      |
 | Linkage, cam and spur-gear kinematics             | `mechanism`                              |
+| Assemble the global stiffness matrix yourself     | `calfem-python` (imports as `calfem`)    |
 | 2D/3D solid FEA without writing the weak form     | `EasyFEA`                                |
 | FEA for any PDE you can write as a weak form      | FEniCSx (`dolfinx`)                      |
 | Full-wave electromagnetic FEA (RF, S-parameters)  | `rapidfem`                               |
@@ -218,10 +219,83 @@ The FE packages in this map cover very different ground. Roughly from least setu
 | anastruct | 2D frames and trusses | Statics, mainly linear | Nodes, elements, loads | pip |
 | Pynite | 3D frames, plates | Linear and P-Δ statics | Nodes, members, loads | pip |
 | sectionproperties | 2D cross-sections | Section properties, stress over the section | Section geometry | pip |
+| CALFEM | Springs, bars, 1D–3D beams, plane and 3D solids, plates, heat flow | Linear statics, vibration modes, heat and potential flow | Element matrices, the DOF numbering, the assembly loop | pip |
 | OpenSeesPy | Frames and continua | Nonlinear static and dynamic, seismic | Elements, materials, analysis steps | pip |
 | EasyFEA | 2D/3D solids, meshed with Gmsh | Elasticity, hyperelasticity, plasticity, contact, phase-field fracture, thermal, beams | Geometry, model, boundary conditions | pip |
 | FEniCSx | 1D/2D/3D, any mesh | Any PDE you can write as a weak form | The variational formulation | conda, Docker or WSL |
 | RapidFEM | 3D, built-in mesher | Full-wave Maxwell (RF and microwave) | Geometry, materials, ports | pip |
+
+## CALFEM [docs](https://calfem-for-python.readthedocs.io/en/latest/) [manual](https://calfem-python-manual.readthedocs.io/en/latest/) [repo](https://github.com/CALFEM/calfem-python)
+**Use for:** finite element analysis you can follow all the way through. CALFEM gives you the element stiffness matrices for springs, bars, beams (1D, 2D and 3D, plus Timoshenko beams and beams on an elastic foundation), plane stress and plane strain triangles and quadrilaterals, 8-node bricks, plates, and heat or potential flow. You assemble them into the global system, apply the supports, solve, and turn the displacements back into element forces and stresses. Gmsh meshing and Matplotlib plots are built in.
+
+**What makes it different:** every other FE tool in this map is a black box. You describe the structure, it returns displacements and forces, and the stiffness matrix never leaves the solver. CALFEM hands you the pieces and you do the assembly yourself: `beam2e` returns one element's stiffness matrix, `assem` adds it into the global matrix, `solveq` applies the supports and solves, and `extract_ed` with `beam2s` turns the displacements back into section forces. Those are the steps of the direct stiffness method as a textbook writes them, so you can print K, check its symmetry, look at its eigenvalues, or compare any entry with a hand calculation. The name says what it was built for: Computer Aided Learning of the Finite Element Method. Lund University's Division of Structural Mechanics has developed it since the late 1970s. The main version runs in MATLAB, and this is its Python port. MIT License.
+
+**Where it fits:** learning the finite element method, and checking a black-box solver. When anastruct or Pynite gives you a frame result, rebuild the frame in CALFEM and compare. That is an independent check you can follow line by line, which is what this workflow asks of every result. It is not for production models: apart from a few second-order (geometric) bar and beam elements everything is linear elastic, there is no plasticity or contact, and you write the assembly loop for every model.
+
+**Checked:** 3.6.16, installed alongside every other pin in `requirements.txt`. The snippet below gives a tip deflection of 25.600 mm, matching PL³/3EI to 4 × 10⁻¹⁶, wall reactions of 1000 N and 2000 N·m, and a symmetric K with exactly three zero eigenvalues.
+
+<div align="center">
+  <img src="https://github.com/CALFEM/calfem-python/raw/master/docs/docs/images/calfem.logo.png" alt="CALFEM logo: element matrices assembling into a mesh" width="260">
+</div>
+
+<sub>Logo: [CALFEM for Python](https://github.com/CALFEM/calfem-python), © Division of Structural Mechanics, Lund University, [MIT License](https://github.com/CALFEM/calfem-python/blob/master/LICENSE).</sub>
+
+### The global stiffness matrix
+
+Every linear static finite element model comes down to one matrix equation, **K a = f**:
+
+- **a** lists every unknown nodal displacement and rotation: the degrees of freedom (DOFs).
+- **f** lists the forces and moments applied at those DOFs.
+- **K**, the global stiffness matrix, connects the two. Entry K<sub>ij</sub> is the force needed at DOF i to hold DOF j at a unit displacement while every other DOF is held at zero. So column j is the complete set of forces that holds that one deformed shape.
+
+**How it is built.** Each element has its own small stiffness matrix, linking only its own DOFs. A 2D beam element has two nodes with three DOFs each (u along the beam, v across it, rotation θ), so its matrix is 6 × 6. A topology table, CALFEM's `edof`, lists the global DOFs each element touches, and assembly adds each element matrix into those rows and columns of K. Where elements share a node their entries add, the way springs in parallel add their stiffnesses. This is the direct stiffness method. Every FE solver in this map assembles its matrix the same way, out of sight.
+
+<p align="center">
+  <img src="assets/calfem-global-stiffness.png" alt="The 9 by 9 global stiffness matrix of a two-element cantilever, showing element 1's 6 by 6 block, element 2's 6 by 6 block, their overlap at the shared node where entries add, the exact zeros, and the rows and columns removed by the wall support" width="760">
+</p>
+
+<sub>Figure: drawn for this README from the K that the snippet below assembles. Every filled cell is a nonzero entry of that matrix, and every empty cell is an exact zero.</sub>
+
+**What K tells you.**
+- **It is symmetric**, K<sub>ij</sub> = K<sub>ji</sub>, by Maxwell–Betti reciprocity. An asymmetric K means an assembly error.
+- **It is sparse and banded.** A DOF couples only to the DOFs of elements that touch it, so most entries are zero. Large solvers store K in sparse form for this reason; CALFEM's sparse solver is `spsolveq`.
+- **It is singular until the structure is supported.** An unsupported structure can move as a rigid body without straining, and those motions need no force, so K a = 0 for them. The unsupported cantilever above has three zero eigenvalues: sliding along x, sliding along y, and rotating. The supports remove them. A zero eigenvalue that survives the supports is a mechanism, such as a missing support or a hinge in the wrong place. That is what a solver means when it reports a singular matrix.
+- **Once properly supported, it is positive definite.** The strain energy ½ aᵀKa is positive for any nonzero displacement, so the solve has exactly one answer.
+- **Its condition number bounds how much round-off the solve can amplify.** Very stiff and very flexible load paths in one model raise it. In a slender beam the axial stiffness EA/L is far larger than the bending stiffness 12EI/L³. For the beam below, the supported matrix has a condition number of 6.7 × 10⁴, which is harmless in double precision.
+
+**Applying the supports.** Split the DOFs into free (F) and supported (S). The free rows give K<sub>FF</sub> a<sub>F</sub> = f<sub>F</sub> − K<sub>FS</sub> a<sub>S</sub>, which is solved for the unknown displacements. The supported rows then give the reactions, r<sub>S</sub> = K<sub>SF</sub> a<sub>F</sub> + K<sub>SS</sub> a<sub>S</sub> − f<sub>S</sub>. CALFEM's `solveq(K, f, bc)` does both and returns the displacements and the reactions. Check the reactions against statics as well as the displacements: here they must equal P and PL.
+
+The cantilever in the figure, 2 m long and 50 × 50 mm steel with a 1 kN tip load, in full:
+
+```python
+import numpy as np
+import calfem.core as cfc
+
+E, A, I = 200e9, 0.05**2, 0.05**4 / 12  # steel, 50 x 50 mm [Pa, m^2, m^4]
+P = 1000.0                              # tip load [N]
+
+# Three DOFs per node: u (axial), v (transverse), θ (rotation), numbered from 1
+edof = np.array([[1, 2, 3, 4, 5, 6],    # element 1: node 1 to node 2
+                 [4, 5, 6, 7, 8, 9]])   # element 2: node 2 to node 3
+ex = [[0.0, 1.0], [1.0, 2.0]]           # x of each element's two ends [m]
+
+K = np.zeros((9, 9))
+for dofs, x in zip(edof, ex):
+    Ke = cfc.beam2e(x, [0.0, 0.0], [E, A, I])  # this element's 6 x 6 matrix
+    cfc.assem(dofs, K, Ke)                      # add it into the global K
+
+f = np.zeros((9, 1))
+f[7] = -P                       # DOF 8 (v at node 3) is NumPy index 7
+bc = np.array([1, 2, 3])        # clamped at the wall: u, v, θ of node 1
+a, r = cfc.solveq(K, f, bc)     # displacements a, reactions r
+
+print(np.allclose(K, K.T))              # True: K is symmetric
+print(np.linalg.eigvalsh(K)[:3])        # three ~0 eigenvalues: rigid-body modes
+print(-a[7, 0] * 1e3)                   # 25.6 mm, = PL³/3EI
+print(r[1, 0], r[2, 0])                 # 1000 N and 2000 N·m at the wall
+```
+
+Two elements give the exact answer here, not a converged one. `beam2e` uses cubic shape functions, and an Euler–Bernoulli beam loaded only at its nodes deflects as a cubic between them. Agreement with PL³/3EI shows the assembly is right; it is not a mesh study.
 
 ## EasyFEA [docs](https://easyfea.readthedocs.io/en/stable/)
 **Use for:** 2D and 3D solid-mechanics FEA without writing the variational formulation yourself: linear elasticity (static, dynamic, homogenisation), hyperelasticity, small-strain plasticity and viscoelasticity, frictionless contact, phase-field fracture, thermal, and Euler-Bernoulli or Timoshenko beams. You mesh with Gmsh through EasyFEA's geometry classes, pick a model, apply boundary conditions and solve. Results plot with Matplotlib or PyVista.
@@ -258,12 +332,12 @@ The FE packages in this map cover very different ground. Roughly from least setu
     <td width="50%"><img src="assets/fenicsx-em-magnetic-potential-Az.png" alt="Magnetic vector potential A_z"></td>
   </tr>
   <tr>
-    <td><img src="assets/fenicsx-em-magnetic-field-B.jpg" alt="Magnetic field B, as glyphs over the mesh"></td>
+    <td><img src="https://jsdokken.com/dolfinx-tutorial/_static/gallery/B.png" alt="Magnetic field B, as glyphs over the mesh"></td>
     <td><img src="https://jsdokken.com/dolfinx-tutorial/_images/deformation.gif" alt="Hyperelastic beam deforming"></td>
   </tr>
 </table>
 
-<sub>Images: [*The FEniCSx tutorial*](https://jsdokken.com/dolfinx-tutorial/) by Jørgen S. Dokken, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Top row and bottom left: the [Electromagnetics example](https://jsdokken.com/dolfinx-tutorial/chapter3/em.html); the A_z and B images were rendered from its interactive plots and cropped. Bottom right: the [Hyperelasticity example](https://jsdokken.com/dolfinx-tutorial/chapter2/hyperelasticity.html), unchanged.</sub>
+<sub>Images: [*The FEniCSx tutorial*](https://jsdokken.com/dolfinx-tutorial/) by Jørgen S. Dokken, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Top row and bottom left: the [Electromagnetics example](https://jsdokken.com/dolfinx-tutorial/chapter3/em.html); the A_z image was rendered from its interactive plot and cropped, and B is the screenshot the tutorial saves for its front-page gallery. Bottom right: the [Hyperelasticity example](https://jsdokken.com/dolfinx-tutorial/chapter2/hyperelasticity.html), unchanged.</sub>
 
 ## RapidFEM [site](https://fem.rapidpassives.org/) [repo](https://github.com/milanofthe/rapidfem)
 **Use for:** Full-wave 3D electromagnetic FEA, in the frequency domain (Nédélec edge elements) and the time domain (DGTD): waveguides, filters, transmission lines, antennas and on-chip RF passives. It returns S-parameters (Touchstone), eigenmodes and far-field patterns. The core is Rust with a Python API, and prebuilt Windows wheels mean `pip install rapidfem` needs no compiler. `rapidfem[ui]` adds a local editor and 3D viewer, and the site runs a browser notebook.
@@ -403,6 +477,18 @@ The fastest way to learn the API is `codegen`. It opens a browser and writes the
       with concurrent.futures.ThreadPoolExecutor(1) as pool:
           return pool.submit(runner).result()
   ```
+- **CALFEM installs as `calfem-python` but imports as `calfem`** (`import calfem.core as cfc`).
+  `pip install calfem` fails, because no package has that name.
+- **CALFEM numbers DOFs from 1**, as its MATLAB original does, in both the topology table (`edof`)
+  and the support list passed to `solveq`. NumPy indexes from 0, so DOF 8 is `f[7]`. A 0-based list
+  raises no error, because index −1 wraps around to the last DOF. In the CALFEM cantilever above,
+  `bc = [0, 1, 2]` fixes DOFs 9, 1 and 2 instead of 1, 2 and 3. That builds a beam pinned at the wall
+  with its tip rotation locked, and its tip still deflects 25.6 mm, so the deflection check passes.
+  The reactions give it away: the 2000 N·m moment appears at the tip, not the wall.
+- **CALFEM's `eigen` uses the general `scipy.linalg.eig`** and silently drops imaginary parts. For a
+  correctly assembled K and M it matches `eigh`, but it would also hide an asymmetric K, and it doesn't
+  guarantee orthogonal mode shapes when two frequencies coincide. Use `scipy.linalg.eigh` on the
+  supported K and M instead. (In 3.6.16, `beam2de` also prints its inputs on every call.)
 
 > [!NOTE]
 > This is just a starter list. Build this list out for yourself as you run into issues.
