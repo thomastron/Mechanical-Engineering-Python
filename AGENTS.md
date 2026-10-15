@@ -20,6 +20,7 @@ in a traveller.
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
 | `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
+| `LICENSE` | MIT, for the repository's own documents and code. Third-party images keep their own licenses (see the README's License section). | Don't change without being asked. |
 
 The `__YYYYMMDD-HHMM` suffix on the two Markdown documents **is their revision identifier**. The
 traveller hard-links to the checklist by filename and heading anchor (`...CHECKLIST__20260816-0939.md#24-triage-gate-...`).
@@ -110,8 +111,8 @@ It must finish without errors and every closed-form check must print `OK`
 
 ## Known inconsistencies (do not propagate)
 
-- The example notebook's title and prose refer to an "anaStruct notebook" and to
-  `Beam_bending_shear_displacement_PlaneSections.ipynb`. Neither is in the repo, and the
-  notebook itself uses PlaneSections only. Its checks are against the closed form, not another package.
+- The example notebook mentions an anaStruct model of the same beam (marked "not in this
+  repo"). It is not in the repo, and the notebook uses PlaneSections only. Its checks are
+  against the closed form, not another package. Don't cite the anaStruct comparison as checked.
 
 When referencing files, check that they exist.
