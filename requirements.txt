@@ -4,6 +4,8 @@
 #
 # Not included: GXBeam (a Julia package, not Python) and FEniCSx (no pip wheels;
 #   use conda-forge fenics-dolfinx or the dolfinx/dolfinx Docker image).
+#   GNU Octave and OpenModelica are standalone programs, not pip packages;
+#   oct2py below needs Octave on the PATH (Debian/Ubuntu: sudo apt install octave).
 # Linux only: openseespy also needs the system BLAS/LAPACK libraries, and gmsh
 #   (pulled in by EasyFEA and calfem-python) needs libGLU and libXft
 #   (Debian/Ubuntu: sudo apt install libblas3 liblapack3 libglu1-mesa libxft2)
@@ -45,6 +47,13 @@ mechanism==1.1.10
 
 # Fatigue cycle counting (wetb.fatigue_tools)
 wetb==0.1.33
+
+# MATLAB and Simulink alternatives: control systems (imports as control),
+# block-diagram simulation, and a bridge that runs .m files in GNU Octave.
+# pathsim is pre-1.0 and changes API between minor releases; keep it pinned.
+control==0.10.2
+pathsim==0.27.1
+oct2py==6.1.1
 
 # Running notebooks, interactively or headless
 jupyterlab==4.6.4
