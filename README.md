@@ -4,7 +4,7 @@ A design checklist, a design-record template, and a worked Python FEA example ch
 
 This is a proof of concept. It ties together three things: a structured way to make design decisions, a written record of every assumption, and analysis in Python. The point is to keep an analysis from quietly inheriting a bad assumption, and to give a clear path from framing the problem to sign-off.
 
-There is one worked example so far. The second half of this page is a visual map of Python packages for design work.
+There is one worked example so far. The second half of this page is a visual map of Python packages for design work, followed by free alternatives to MATLAB and Simulink.
 
 ## 1. The design and analysis framework
 There are two documents. One is reference material. The other is the working record for a part.
@@ -36,7 +36,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins every Python package in the visual map below, with two exceptions: GXBeam is a Julia package, and FEniCSx has no pip wheels (see its section for conda and Docker). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
+`requirements.txt` pins every Python package in the visual map below. The map's other entries are not pip packages: GXBeam is a Julia package, FEniCSx has no pip wheels (see its section for conda and Docker), and GNU Octave and OpenModelica are standalone programs. `oct2py` needs Octave installed and on the PATH (Debian/Ubuntu: `sudo apt install octave`). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 
 To run a notebook headless and check that it still passes:
 
@@ -73,6 +73,12 @@ Organized by what you are trying to do, not by package taxonomy.
 | Root-finding, curve fits, ODEs, eigenvalues       | `scipy`                                  |
 | Fatigue cycle counting from a load history        | `wetb.fatigue_tools`                     |
 | Large-deflection / geometrically exact beams      | GXBeam.jl                                |
+| Run existing MATLAB `.m` code, or check a port    | GNU Octave, via `oct2py`                 |
+| Transfer functions, Bode, root locus, margins     | `control` (python-control)               |
+| Simulink-style block-diagram simulation           | `pathsim`                                |
+| Simscape-style physical (acausal) models          | OpenModelica                             |
+
+The last four rows are covered in [MATLAB and Simulink alternatives](#matlab-and-simulink-alternatives).
 
 ## GXbeam [docs](https://flow.byu.edu/GXBeam.jl/stable/)
 **Use for:** Simulating large-deflection, highly flexible structures (like wind turbine blades or high-aspect-ratio wings) using geometrically exact beam theory.
@@ -399,7 +405,7 @@ Two elements give the exact answer here, not a converged one. `beam2e` uses cubi
 <sub>Images: [mechanism README](https://github.com/gabemorris12/mechanism), © 2021 Gabriel Nix Morris, [MIT License](https://github.com/gabemorris12/mechanism/blob/master/license.txt).</sub>
 
 ## Numpy
-MATLAB alternative core. NumPy is the fundamental package for scientific computing in Python. It is a Python library that provides a multidimensional array object, various derived objects (such as masked arrays and matrices), and an assortment of routines for fast operations on arrays, including mathematical, logical, shape manipulation, sorting, selecting, I/O, discrete Fourier transforms, basic linear algebra, basic statistical operations, random simulation and much more.
+MATLAB alternative core (see [MATLAB and Simulink alternatives](#matlab-and-simulink-alternatives)). NumPy is the fundamental package for scientific computing in Python. It is a Python library that provides a multidimensional array object, various derived objects (such as masked arrays and matrices), and an assortment of routines for fast operations on arrays, including mathematical, logical, shape manipulation, sorting, selecting, I/O, discrete Fourier transforms, basic linear algebra, basic statistical operations, random simulation and much more.
 
 ## SciPy
 SciPy is a collection of mathematical algorithms and convenience functions built on [NumPy](https://numpy.org/). It adds significant power to Python by providing the user with high-level commands and classes for manipulating and visualizing data. See note at bottom about under-use.
@@ -439,6 +445,109 @@ Then add `--template-file tabloid.tex.j2` to the command. Swap the two sizes for
 Install with `pip install playwright`, or `pip install "nbconvert[webpdf]"` to get it alongside nbconvert's webpdf exporter. Then run `python -m playwright install chromium`, which downloads Playwright's own browser build, matched to its version. That's several hundred MB, stored outside the project folder. Re-run it after upgrading Playwright.
 
 The fastest way to learn the API is `codegen`. It opens a browser and writes the Python as you click: `python -m playwright codegen --target=python https://example.com`.
+
+---
+
+# MATLAB and Simulink alternatives
+
+"A MATLAB alternative" can mean two different things, and they have different answers:
+
+1. **You need to run MATLAB code you already have:** course scripts, a legacy calc, or a toolbox written in `.m` files, like CALFEM's MATLAB original. That needs the MATLAB *language*, which means **GNU Octave**.
+2. **You need what MATLAB does, starting fresh.** The Python stack in the map above already covers that: NumPy and SciPy for the numerics, Matplotlib for plots, and **python-control** for the Control System Toolbox.
+
+Simulink splits too, and this split matters more:
+
+- **Causal (signal-flow) block diagrams.** This is Simulink itself. Every block has inputs and outputs, so you derive the equations of motion first and then wire them up as integrators and gains. That suits control loops and signal processing. Free counterparts: **PathSim** in Python, and Scilab's Xcos.
+- **Acausal (physical-network) models.** This is Simscape. You connect a mass, a spring and a damper at a shared flange, and the tool writes the equations, balancing forces at every connection. When the layout changes, nothing has to be re-derived. That suits drivetrains, hydraulics and thermal networks. Free counterparts: **OpenModelica**, and ModelingToolkit.jl in Julia.
+
+A causal tool is not a Simscape replacement. The difference shows once the plant has more than a few physical parts.
+
+| Tool | Stands in for | How you model | Language | License | Install on Windows |
+|---|---|---|---|---|---|
+| NumPy, SciPy, Matplotlib, python-control | MATLAB and the Control System Toolbox | Scripts and notebooks | Python | BSD | pip |
+| GNU Octave | MATLAB, the language | Scripts; most `.m` files run unchanged | MATLAB | GPL-3.0 | installer |
+| Scilab with Xcos | MATLAB-like numerics and Simulink-like diagrams | Scripts; causal blocks, plus a few Modelica (acausal) palettes | Scilab: MATLAB-like, not compatible | GPL-2.0 | installer |
+| PathSim | Simulink | Causal block diagram, in code or in the PathView browser editor | Python | MIT | pip |
+| OpenModelica | Simulink with Simscape | Acausal components from the Modelica Standard Library | Modelica | AGPL-3.0 (or OSMC-PL) | installer |
+| ModelingToolkit.jl | Simscape, as code | Acausal and symbolic | Julia | MIT core; AGPL parts since v11 | Julia's package manager |
+
+**Moving a model out of Simulink.** None of these opens a `.slx` file. The portable route is FMI (the Functional Mock-up Interface), the standard for exchanging compiled models. Simulink can export a model as an FMU (Functional Mock-up Unit), which needs a Simulink Compiler license, and OpenModelica, FMPy and PathSim's FMU blocks can run it. An FMU exported from a variable-step model also needs the free MATLAB Runtime on the machine that runs it. `requirements.txt` doesn't install FMPy; `pip install "pathsim[fmi]"` adds it.
+
+## GNU Octave [site](https://octave.org/) [docs](https://docs.octave.org/latest/) [packages](https://gnu-octave.github.io/packages/)
+**Use for:** Running existing MATLAB code without a MATLAB license: course material, legacy calculation scripts, and toolboxes written as plain `.m` files. The syntax, the matrix semantics, 1-based indexing and most core functions match MATLAB, so code usually runs unchanged.
+
+**Where it fits:** Octave is compatible with the MATLAB language, not the MATLAB product. There is no Simulink, and it cannot open `.slx` models. Community packages stand in for MathWorks toolboxes (control, signal, statistics, optim, symbolic and others, installed with `pkg install`). They cover the common functions, not all of them. Apps built in App Designer don't run. Use Octave to keep old `.m` code alive and to check a Python rewrite against it. For new work, the Python stack does more. GPL-3.0. The current release is 11.3 (June 2026); Ubuntu 24.04's `apt` still ships 8.4.
+
+**From Python:** `oct2py` starts an Octave session and calls `.m` functions as if they were Python functions, passing NumPy arrays both ways. That makes Octave an independent check inside a notebook: run the original MATLAB code and the Python rewrite on the same inputs, and compare.
+
+**Checked:** Octave 8.4.0 with its control package 4.0.1, and oct2py 6.1.1. The CALFEM cantilever from the section above was run through CALFEM's original MATLAB code ([calfem-matlab](https://github.com/CALFEM/calfem-matlab), unmodified), called from Python with oct2py. It assembles a K identical, entry for entry, to the one the Python port builds. The displacements agree with the port's to 1 × 10⁻¹⁵, giving a tip deflection of 25.600 mm and wall reactions of 1000 N and 2000 N·m. For the m-c-k system in the SciPy examples below, `damp(tf(1, [1 2 100]))` gives ωn = 10 rad/s and ζ = 0.1, and `step` on a fine time grid gives a 72.925% overshoot, matching exp(−πζ/√(1−ζ²)).
+
+The MATLAB original's API differs from the Python port's in two places, so a line-by-line translation breaks:
+
+```matlab
+Edof = [1  1 2 3  4 5 6;    % element number first, then its DOFs.
+        2  4 5 6  7 8 9];   % Python's edof has no element-number column
+bc = [1 0; 2 0; 3 0];       % [DOF, prescribed value]. Python's solveq takes only the DOFs
+```
+
+## PathSim [site](https://pathsim.org/) [docs](https://docs.pathsim.org/) [repo](https://github.com/pathsim/pathsim) [editor](https://view.pathsim.org/)
+**Use for:** Simulink-style dynamic simulation in plain Python. You wire blocks into a diagram and run it: sources, integrators, gains, adders, transfer functions, state-space and PID blocks, sample-and-hold and other discrete-time blocks, and scopes. It handles continuous, discrete and hybrid systems. Zero-crossing events cover impacts, switches and relays, and subsystems nest. About 30 ODE solvers come with it, from fixed-step Runge–Kutta to adaptive methods (RKDP54, RKF78) and implicit ones for stiff systems (ESDIRK, BDF). It depends only on NumPy, SciPy and Matplotlib. PathView, its graphical editor, runs in the browser, builds the same diagrams by drag-and-drop, and exports them as PathSim scripts.
+
+**Where it fits:** Control loops and signal flow. Typical parts are a plant written as a transfer function or ODE, a controller, a sensor model, a saturation, or a sampled controller on a continuous plant. For a single ODE, `solve_ivp` takes less code. PathSim pays off once the model has several interacting parts you want to swap, or mixes discrete and continuous time. It is causal, so it stands in for Simulink, not Simscape: you derive the equations yourself, as in the snippet below. MIT license. Its author, Milan Rother, also wrote RapidFEM above, and PathSim is described in a 2025 [JOSS paper](https://doi.org/10.21105/joss.08158). It is pre-1.0 and moving fast, from 0.20 in March 2026 to 0.27 in October, so keep it pinned.
+
+**Checked:** 0.27.1. The snippet below runs the m-c-k system from the SciPy examples, released from x₀ = 10 mm. With the adaptive RKDP54 solver it matches the closed-form damped response to 3.6 × 10⁻⁹ of x₀. With the default solver the error is 6.2 × 10⁻³ of x₀ (see the figure, and the gotcha below). A PID loop around the same plant matches python-control's closed-loop step response to 5 × 10⁻¹⁰ m on a 10 mm setpoint.
+
+```python
+from pathsim import Simulation, Connection
+from pathsim.blocks import Integrator, Amplifier, Adder, Scope
+from pathsim.solvers import RKDP54
+
+m, c, k = 1.0, 2.0, 100.0          # [kg, N·s/m, N/m]
+
+v = Integrator(0.0)                # velocity [m/s], v(0) = 0
+x = Integrator(0.01)               # displacement [m], x(0) = 10 mm
+damp = Amplifier(-c / m)
+spring = Amplifier(-k / m)
+acc = Adder()                      # x'' = -(c/m) x' - (k/m) x
+scope = Scope()
+
+sim = Simulation(
+    blocks=[v, x, damp, spring, acc, scope],
+    connections=[
+        Connection(v, x, damp),    # one output, several inputs
+        Connection(x, spring, scope),
+        Connection(damp, acc[0]),
+        Connection(spring, acc[1]),
+        Connection(acc, v),
+    ],
+    Solver=RKDP54,                 # the default is fixed-step, 2nd order
+    tolerance_lte_rel=1e-8,
+    tolerance_lte_abs=1e-12,
+    log=False,                     # it logs progress to the console by default
+)
+sim.run(3.0)                       # simulate 3 s
+t, (xs,) = scope.read()            # time [s], displacement [m]
+```
+
+<p align="center">
+  <img src="assets/pathsim-solver-error.png" alt="Free vibration of the m-c-k system: the closed-form response, and PathSim's error against it on a log scale. The default fixed-step solver errs by up to 6.2e-3 of the initial displacement; the adaptive RKDP54 solver by up to 3.6e-9" width="760">
+</p>
+
+<sub>Figure: drawn for this README from two runs of the snippet above, one with PathSim's default solver and one with RKDP54.</sub>
+
+## python-control [docs](https://python-control.readthedocs.io/) [repo](https://github.com/python-control/python-control)
+**Use for:** What MATLAB's Control System Toolbox does: transfer-function, state-space and zero-pole-gain models; series, parallel and feedback connections; step, impulse and forced responses; Bode, Nyquist and root-locus plots; gain and phase margins; pole placement, LQR and Kalman gains; and continuous-to-discrete conversion. `control.matlab` provides the MATLAB names (`tf`, `ss`, `step`, `bode`, `lsim`, `margin`), so a MATLAB script ports almost line for line. Install and import it as `control` (`import control as ct`). BSD-3-Clause.
+
+**Where it fits:** Linear analysis and controller design: frequency response, stability margins, gain selection. Pair it with PathSim when you need the time response of the nonlinear or hybrid system the linear design is for, and use each to check the other.
+
+**Checked:** 0.10.2, without the optional Slycot (LQR, Kalman gains, pole placement and `sample_system` all work without it). For the m-c-k system, `damp` gives ωn = 10 rad/s and ζ = 0.1, and `dcgain` gives 1/k = 0.01 m/N. A step response on a fine time grid overshoots by 72.92476%, as exp(−πζ/√(1−ζ²)) predicts. Its closed-loop step response for the PID loop above is the reference PathSim was checked against.
+
+## OpenModelica [site](https://openmodelica.org/) [docs](https://openmodelica.org/doc/OpenModelicaUsersGuide/latest/)
+**Use for:** Acausal physical modeling, the free counterpart to Simscape and to commercial Modelica tools such as Dymola. You connect components from the Modelica Standard Library (translational and rotational mechanics, multibody, electrical, thermal, fluids), either in the OMEdit graphical editor or as Modelica text. OpenModelica derives, simplifies and solves the equations. It exports and imports FMUs, and OMPython drives it from Python.
+
+**Where it fits:** Physical systems whose layout you would rather draw than derive: a drivetrain with a clutch, a hydraulic circuit, a thermal network, an electromechanical actuator. In Modelica, the m-c-k system above is four components (a fixed point, a spring, a damper and a mass) and four `connect` statements, with no equation written by hand. In PathSim you write x'' = −(c/m)x' − (k/m)x first. It is dual-licensed: AGPL-3.0 for anyone, or the OSMC-PL for members of the consortium behind it. The Modelica Standard Library is BSD-3-Clause. The current release is 1.27.1 (September 2026).
+
+**Not checked here.** It is a standalone install (a Windows installer, or the OpenModelica apt repository or Docker images on Linux), not a pip package, so `requirements.txt` doesn't include it.
 
 ---
 
@@ -489,6 +598,22 @@ The fastest way to learn the API is `codegen`. It opens a browser and writes the
   correctly assembled K and M it matches `eigh`, but it would also hide an asymmetric K, and it doesn't
   guarantee orthogonal mode shapes when two frequencies coincide. Use `scipy.linalg.eigh` on the
   supported K and M instead. (In 3.6.16, `beam2de` also prints its inputs on every call.)
+- **Translate MATLAB's `eig(K)` as `eigh`, not `eig`.** MATLAB and Octave check whether the matrix is
+  exactly symmetric and, if it is, use the symmetric eigensolver, so `eig(K)` and `eig(K, M)` there
+  return real eigenvalues and orthogonal mode shapes. `scipy.linalg.eig` never makes that switch.
+  (The MATLAB check is exact: a K that is symmetric only to round-off takes the general path there too.)
+- **PathSim's default solver is fixed-step and 2nd order** (`SSPRK22` at dt = 0.01 s). Simulink's
+  default is variable-step, so a model carried across keeps running, gives no warning, and loses
+  accuracy. With ζ = 0.1, the m-c-k model's peak error is 0.6% of x₀ at ωn = 10 rad/s, 16% at
+  50 rad/s and 90% at 100 rad/s. Pass an adaptive solver and tolerances (`Solver=RKDP54`,
+  `tolerance_lte_rel`, `tolerance_lte_abs`), or at least halve `dt` and see whether the answer moves.
+- **PathSim's `PID(f_max=...)` is in rad/s, not Hz.** The derivative term is Kd·s/(1 + s/f_max), so
+  its filter pole sits at f_max rad/s. The block's own docstring calls `f_max=1e3` "cutoff at 1kHz";
+  that corner is at 159 Hz.
+- **python-control's `step_info` measures on its own coarse time grid.** For the m-c-k system it
+  takes 276 points over 6.9 s, steps over the peak, and reports a 72.50% overshoot where theory gives
+  72.92%. Pass `T=np.linspace(0, t_end, n)` fine enough to resolve the peak. `forced_response` also
+  needs evenly spaced times, and raises an error otherwise.
 
 > [!NOTE]
 > This is just a starter list. Build this list out for yourself as you run into issues.

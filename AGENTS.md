@@ -81,7 +81,13 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
 - **CALFEM** (`calfem-python`, imported as `calfem`) numbers DOFs from 1 in `edof` and in the `bc`
   list for `solveq`. A 0-based list runs without error and fixes the wrong DOFs, so check the
   reactions against statics. Its `eigen` calls `eig`; use `eigh` instead (next item).
-- Use `scipy.linalg.eigh`, never `eig`, on stress tensors and K/M pairs.
+- Use `scipy.linalg.eigh`, never `eig`, on stress tensors and K/M pairs. When porting MATLAB,
+  `eig(K)` becomes `eigh`: MATLAB and Octave switch to the symmetric solver themselves, SciPy doesn't.
+- **PathSim** defaults to a fixed-step 2nd-order solver (`SSPRK22`, dt = 0.01 s). Pass an adaptive
+  solver (e.g. `Solver=RKDP54`) with `tolerance_lte_rel`/`tolerance_lte_abs`.
+  `PID(f_max=...)` is in rad/s, not Hz.
+- **python-control** `step_info` uses its own coarse time grid and under-reports overshoot; pass a
+  fine `T`. `forced_response` needs evenly spaced times.
 
 ## Environment and commands
 
@@ -99,6 +105,8 @@ Likewise `gmsh`, which EasyFEA and CALFEM use for meshing, needs `apt install li
 (`libGLU.so.1` / `libXft.so.2: cannot open shared object file`).
 GXBeam is Julia, not Python, and is not in the file. Neither is FEniCSx, which has no pip
 wheels (conda-forge `fenics-dolfinx` or the `dolfinx/dolfinx` Docker image).
+`oct2py` installs from the file but needs GNU Octave itself (`apt install octave`). OpenModelica is
+a standalone program and is not in the file either.
 
 If a notebook needs a package that isn't listed, add it to `requirements.txt` with an exact `==`
 pin, then re-run `pip install -r requirements.txt`, `pip check`, and every notebook.
