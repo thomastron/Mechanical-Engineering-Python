@@ -83,9 +83,19 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
   reactions against statics. Its `eigen` calls `eig`; use `eigh` instead (next item).
 - Use `scipy.linalg.eigh`, never `eig`, on stress tensors and K/M pairs. When porting MATLAB,
   `eig(K)` becomes `eigh`: MATLAB and Octave switch to the symmetric solver themselves, SciPy doesn't.
+- **scikit-fem** (imported as `skfem`): `lame_parameters(E, nu)` gives the 3D λ, μ, which makes a
+  2D model plane strain (9% stiff for a thin plate); use `plane_stress(E, nu)` for plane stress.
+  `plane_stress` returns λ, μ from 12.0.2 but an equivalent (E, ν) up to 12.0.1, so check the pin
+  before copying older examples. Straight-edged elements on a curved boundary cap convergence at
+  O(h²) whatever the element order; run the mesh study on the governing stress.
 - **PathSim** defaults to a fixed-step 2nd-order solver (`SSPRK22`, dt = 0.01 s). Pass an adaptive
   solver (e.g. `Solver=RKDP54`) with `tolerance_lte_rel`/`tolerance_lte_abs`.
-  `PID(f_max=...)` is in rad/s, not Hz.
+  `PID(f_max=...)` is in rad/s, not Hz. Its FMU blocks moved to `pathsim_fmi`.
+- **OpenModelica** co-simulation FMUs integrate with explicit Euler, one step per communication
+  interval, unless exported with `--fmiFlags=s:cvode`. Prefer model exchange (the importing tool
+  integrates), and pass `relative_tolerance` to FMPy's `simulate_fmu`.
+- **SimuPy** is not in `requirements.txt` (its last release fails on NumPy 2). If you meet it, its
+  default `nsteps=500` silently truncates the result at a tight `rtol`; check `res.t[-1]`.
 - **python-control** `step_info` uses its own coarse time grid and under-reports overshoot; pass a
   fine `T`. `forced_response` needs evenly spaced times.
 
@@ -106,7 +116,9 @@ Likewise `gmsh`, which EasyFEA and CALFEM use for meshing, needs `apt install li
 GXBeam is Julia, not Python, and is not in the file. Neither is FEniCSx, which has no pip
 wheels (conda-forge `fenics-dolfinx` or the `dolfinx/dolfinx` Docker image).
 `oct2py` installs from the file but needs GNU Octave itself (`apt install octave`). OpenModelica is
-a standalone program and is not in the file either.
+a standalone program and is not in the file either; `OMPython` is, and needs OpenModelica's `omc`
+(locally, or in the `openmodelica/openmodelica` Docker image run with `--user`, since `omc` refuses
+to serve ZeroMQ as root). SimuPy is compared in the README but deliberately not pinned.
 
 If a notebook needs a package that isn't listed, add it to `requirements.txt` with an exact `==`
 pin, then re-run `pip install -r requirements.txt`, `pip check`, and every notebook.

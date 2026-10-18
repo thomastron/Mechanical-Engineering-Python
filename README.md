@@ -36,7 +36,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins every Python package in the visual map below. The map's other entries are not pip packages: GXBeam is a Julia package, FEniCSx has no pip wheels (see its section for conda and Docker), and GNU Octave and OpenModelica are standalone programs. `oct2py` needs Octave installed and on the PATH (Debian/Ubuntu: `sudo apt install octave`). On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
+`requirements.txt` pins every Python package in the visual map below. The map's other entries are not pip packages: GXBeam is a Julia package, FEniCSx has no pip wheels (see its section for conda and Docker), and GNU Octave and OpenModelica are standalone programs. `oct2py` needs Octave installed and on the PATH (Debian/Ubuntu: `sudo apt install octave`), and `OMPython` needs OpenModelica. SimuPy is compared below but not pinned, because its last release doesn't import on NumPy 2. On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 
 To run a notebook headless and check that it still passes:
 
@@ -68,7 +68,8 @@ Organized by what you are trying to do, not by package taxonomy.
 | Linkage, cam and spur-gear kinematics             | `mechanism`                              |
 | Assemble the global stiffness matrix yourself     | `calfem-python` (imports as `calfem`)    |
 | 2D/3D solid FEA without writing the weak form     | `EasyFEA`                                |
-| FEA for any PDE you can write as a weak form      | FEniCSx (`dolfinx`)                      |
+| Weak-form FEA in pure Python, installed with pip  | `scikit-fem` (imports as `skfem`)        |
+| Weak-form FEA at scale, compiled and parallel     | FEniCSx (`dolfinx`)                      |
 | Full-wave electromagnetic FEA (RF, S-parameters)  | `rapidfem`                               |
 | Root-finding, curve fits, ODEs, eigenvalues       | `scipy`                                  |
 | Fatigue cycle counting from a load history        | `wetb.fatigue_tools`                     |
@@ -76,9 +77,11 @@ Organized by what you are trying to do, not by package taxonomy.
 | Run existing MATLAB `.m` code, or check a port    | GNU Octave, via `oct2py`                 |
 | Transfer functions, Bode, root locus, margins     | `control` (python-control)               |
 | Simulink-style block-diagram simulation           | `pathsim`                                |
-| Simscape-style physical (acausal) models          | OpenModelica                             |
+| Simscape-style physical (acausal) models          | OpenModelica, driven by `OMPython`       |
+| Run an exported model (an FMU) from Python        | `fmpy`                                   |
+| Put an FMU inside a block diagram                 | `pathsim-fmi`                            |
 
-The last four rows are covered in [MATLAB and Simulink alternatives](#matlab-and-simulink-alternatives).
+The last six rows are covered in [MATLAB and Simulink alternatives](#matlab-and-simulink-alternatives).
 
 ## GXbeam [docs](https://flow.byu.edu/GXBeam.jl/stable/)
 **Use for:** Simulating large-deflection, highly flexible structures (like wind turbine blades or high-aspect-ratio wings) using geometrically exact beam theory.
@@ -228,6 +231,7 @@ The FE packages in this map cover very different ground. Roughly from least setu
 | CALFEM | Springs, bars, 1D–3D beams, plane and 3D solids, plates, heat flow | Linear statics, vibration modes, heat and potential flow | Element matrices, the DOF numbering, the assembly loop | pip |
 | OpenSeesPy | Frames and continua | Nonlinear static and dynamic, seismic | Elements, materials, analysis steps | pip |
 | EasyFEA | 2D/3D solids, meshed with Gmsh | Elasticity, hyperelasticity, plasticity, contact, phase-field fracture, thermal, beams | Geometry, model, boundary conditions | pip |
+| scikit-fem | 1D/2D/3D; simple meshes built in, others imported | Any PDE you can write as a weak form; ships elasticity, plate (Morley, Argyris) and beam (Hermite) elements | The weak form, the mesh, the boundary conditions | pip |
 | FEniCSx | 1D/2D/3D, any mesh | Any PDE you can write as a weak form | The variational formulation | conda, Docker or WSL |
 | RapidFEM | 3D, built-in mesher | Full-wave Maxwell (RF and microwave) | Geometry, materials, ports | pip |
 
@@ -325,10 +329,84 @@ Two elements give the exact answer here, not a converged one. `beam2e` uses cubi
 
 <sub>Images: [EasyFEA documentation](https://easyfea.readthedocs.io/en/stable/) gallery, © Université Gustave Eiffel and INRIA (Matthieu Noel), [GPL-3.0](https://github.com/matnoel/EasyFEA/blob/main/LICENSE.txt).</sub>
 
+## scikit-fem [docs](https://scikit-fem.readthedocs.io/) [gallery](https://scikit-fem.readthedocs.io/en/latest/listofexamples.html) [repo](https://github.com/kinnala/scikit-fem)
+**Use for:** FEA of any physics you can write as a weak form, in plain Python. You write the bilinear and linear forms as short Python functions, and scikit-fem assembles them into SciPy sparse matrices for SciPy to solve. The element library is wide: Lagrange triangles up to fourth order, quadrilaterals, tetrahedra and hexahedra; cubic Hermite beam elements; Morley and Argyris elements for Kirchhoff plates; and Nédélec and Raviart–Thomas elements for electromagnetics and mixed methods. It depends only on NumPy and SciPy and contains no compiled code, so `pip install scikit-fem` works wherever Python does. BSD-3-Clause, described in a 2020 [JOSS paper](https://doi.org/10.21105/joss.02369), and on its twelfth major version.
+
+**Where it fits:** the same job as FEniCSx, since you supply the weak form, without the conda or Docker install. Among the other FE tools here, CALFEM hands you element matrices and leaves the assembly to you; scikit-fem does the assembly and asks you for the weak form; EasyFEA ships ready-made solid-mechanics models. That makes scikit-fem a good independent check on an EasyFEA stress result, because the two share no element or assembly code. It is an assembler, not an analysis package, and that sets its limits:
+
+- **Meshes:** tensor grids, circles and uniform refinement are built in. Anything else comes from Gmsh, read through `meshio` (not in `requirements.txt`) or passed in as arrays.
+- **Solvers:** SciPy's. Assembly stays fast, but the default sparse direct solve limits 3D models. The project's own benchmark (linear tetrahedra, on a laptop) takes 11 s to solve 33 000 DOFs and 63 s for 64 000. Beyond that you need an iterative solver.
+- **Nonlinear problems:** you write the Newton loop, or use the optional JAX-based `skfem.autodiff`.
+- **Post-processing:** basic Matplotlib plots. Stresses are yours to compute from the displacement gradient.
+
+**Checked:** 12.0.2, installed alongside every other pin in `requirements.txt`.
+- **The cantilever from the CALFEM and EasyFEA sections:** two cubic Hermite beam elements and the weak form ∫ EI w″v″ dx. The tip deflection is 25.600 mm, matching PL³/3EI to 4 × 10⁻¹⁶, and the wall reactions are 1000 N and 2000 N·m.
+- **A thick-walled cylinder under internal pressure,** against Lamé's closed form (the snippet below): 100 mm bore, 200 mm outside diameter, steel, 100 MPa, plane strain, quadratic triangles. The radial displacement at the bore is 47.65 μm against 47.67 μm (3.8 × 10⁻⁴). The peak hoop stress, evaluated on the bore, is 166.90 MPa against 166.67 MPa (0.14%). The reaction across the symmetry plane equals p·rᵢ to round-off. That last check is equilibrium, so it holds on any mesh: it catches sign and boundary-condition errors, not discretization error.
+- **A mesh study** (the figure). The hoop-stress error falls roughly as h², from 3.8% on the coarsest mesh to 0.12% on the finest. Straight-edged triangles on a curved bore also hold the displacement to h², even with quadratic elements. Curved (isoparametric) element edges, from `MeshTri2`, make the bore displacement 20 times more accurate on the finest mesh but leave the stress error almost unchanged. The stress is the governing number here, so the stress study is the one to report.
+
+<p align="center">
+  <img src="assets/scikit-fem-lame-cylinder.png" alt="Left: hoop stress over a quarter of the thick-walled cylinder, highest at the bore. Right: relative error against Lamé versus degrees of freedom, on log scales. The hoop-stress error falls from 3.8e-2 to 1.2e-3 with straight or curved edges; the bore displacement error falls from 3e-2 to 3.8e-4 with straight edges and to 1.9e-5 with curved edges" width="760">
+</p>
+
+<sub>Figure: drawn for this README from the snippet below, with the hoop stress evaluated from the displacement gradient on the bore facets.</sub>
+
+```python
+import numpy as np
+from skfem import (MeshTri, Basis, FacetBasis, ElementTriP2, ElementVector,
+                   LinearForm, condense, solve)
+from skfem.helpers import dot
+from skfem.models.elasticity import linear_elasticity, lame_parameters
+
+E, nu = 200e9, 0.3                # steel [Pa, -]
+ri, ro, p = 0.05, 0.10, 100e6     # bore and outside radius [m], internal pressure [Pa]
+
+# Quarter of the cross-section: a 16 x 32 grid in (r, θ), mapped to (x, y)
+m = MeshTri.init_tensor(np.linspace(ri, ro, 17), np.linspace(0, np.pi / 2, 33))
+r, th = m.p
+m = MeshTri(np.array([r * np.cos(th), r * np.sin(th)]), m.t).with_boundaries({
+    "bore": lambda x: np.hypot(*x) < 1.001 * ri,  # facet midpoints sit just inside the arc
+    "y0": lambda x: np.isclose(x[1], 0.0),        # symmetry plane: v = 0
+    "x0": lambda x: np.isclose(x[0], 0.0),        # symmetry plane: u = 0
+})
+basis = Basis(m, ElementVector(ElementTriP2()))   # quadratic triangles
+bore = FacetBasis(m, basis.elem, facets="bore")
+
+# The weak form: ∫ σ(u) : ε(v) dΩ = ∫ t · v dΓ, with the traction t = −p n on the bore
+K = linear_elasticity(*lame_parameters(E, nu)).assemble(basis)  # 3D λ, μ: plane strain
+f = LinearForm(lambda v, w: dot(-p * w.n, v)).assemble(bore)
+D = np.concatenate([basis.get_dofs("y0").all("u^2"), basis.get_dofs("x0").all("u^1")])
+u = solve(*condense(K, f, D=D))
+
+A = p * ri**2 / (ro**2 - ri**2)
+node = np.flatnonzero(np.isclose(m.p[0], ri) & np.isclose(m.p[1], 0.0))[0]  # bore, on the x axis
+print(u[basis.nodal_dofs[0, node]] * 1e6)                           # 47.65 μm
+print((1 + nu) / E * A * ((1 - 2 * nu) * ri + ro**2 / ri) * 1e6)    # 47.67 μm, Lamé
+print(-(K @ u - f)[basis.get_dofs("y0").all("u^2")].sum() / 1e6)    # 5.000 MN/m = p·ri
+```
+
+`lame_parameters` returns the three-dimensional λ and μ, and in a 2D model that means plane strain, which is right for a long cylinder. For a thin plate, use `plane_stress` instead. Mixing them up raises no error; see the gotchas.
+
+From the project's gallery, all solid mechanics:
+
+<table>
+  <tr>
+    <td width="33%"><img src="assets/scikit-fem-ex02-kirchhoff-plate.png" alt="Example 2: deflection of a Kirchhoff plate with clamped, simply supported and free edges, Morley elements"></td>
+    <td width="33%"><img src="assets/scikit-fem-ex03-eigenmode.png" alt="Example 3: the fifth vibration mode of an elastic body fixed on its left edge, colored by the stress σxx"></td>
+    <td width="33%"><img src="https://raw.githubusercontent.com/kinnala/scikit-fem/12.0.2/docs/examples/ex51.png" alt="Example 51: large-deformation contact between two elastic bodies, colored by σyy"></td>
+  </tr>
+  <tr>
+    <td>Kirchhoff plate bending, Morley elements</td>
+    <td>Elastic vibration, fifth mode</td>
+    <td>Large-deformation contact (needs JAX)</td>
+  </tr>
+</table>
+
+<sub>Images: the [scikit-fem gallery](https://scikit-fem.readthedocs.io/en/latest/listofexamples.html), © scikit-fem developers, [BSD-3-Clause](https://github.com/kinnala/scikit-fem/blob/master/LICENSE). Examples 2 and 3 were rendered for this README by running the gallery's own code, unchanged, with scikit-fem 12.0.2. Example 51 is the image from the project's repository.</sub>
+
 ## FEniCSx [tutorial](https://jsdokken.com/dolfinx-tutorial/) [docs](https://docs.fenicsproject.org/)
 **Use for:** FEA of any physics you can write as a weak form: elasticity, hyperelasticity, heat transfer, Navier-Stokes, Helmholtz and electromagnetics. You state the variational problem in near-mathematical notation (UFL), and FEniCSx generates and compiles the element code. It runs in parallel with MPI, from a laptop to a cluster.
 
-**Where it fits:** the most general option here, and the most work, because you derive the weak form yourself. Reach for EasyFEA when the physics is standard solid mechanics, and for FEniCSx when it isn't: multiphysics, custom constitutive laws, or magnetostatics. The electromagnetics example below is an iron cylinder with copper wires wound around it, solved for the magnetic vector potential A_z and the magnetic field B.
+**Where it fits:** the most general option here, and the most work, because you derive the weak form yourself. Reach for EasyFEA when the physics is standard solid mechanics, and for a weak-form tool when it isn't: multiphysics, custom constitutive laws, or magnetostatics. Of the two weak-form tools, scikit-fem installs with pip and suits models a laptop can solve directly. FEniCSx compiles its forms and runs in parallel, which is what large 3D models need. The electromagnetics example below is an iron cylinder with copper wires wound around it, solved for the magnetic vector potential A_z and the magnetic field B.
 
 **Install:** no pip wheels for Windows. Use conda-forge (`fenics-dolfinx`), the official Docker images (`dolfinx/dolfinx`, `dolfinx/lab`), or Ubuntu's FEniCS PPA, which on Windows means WSL or Docker. LGPL-3.0.
 
@@ -457,7 +535,7 @@ The fastest way to learn the API is `codegen`. It opens a browser and writes the
 
 Simulink splits too, and this split matters more:
 
-- **Causal (signal-flow) block diagrams.** This is Simulink itself. Every block has inputs and outputs, so you derive the equations of motion first and then wire them up as integrators and gains. That suits control loops and signal processing. Free counterparts: **PathSim** in Python, and Scilab's Xcos.
+- **Causal (signal-flow) block diagrams.** This is Simulink itself. Every block has inputs and outputs, so you derive the equations of motion first and then wire them up as integrators and gains. That suits control loops and signal processing. Free counterparts: **PathSim** and SimuPy in Python, and Scilab's Xcos.
 - **Acausal (physical-network) models.** This is Simscape. You connect a mass, a spring and a damper at a shared flange, and the tool writes the equations, balancing forces at every connection. When the layout changes, nothing has to be re-derived. That suits drivetrains, hydraulics and thermal networks. Free counterparts: **OpenModelica**, and ModelingToolkit.jl in Julia.
 
 A causal tool is not a Simscape replacement. The difference shows once the plant has more than a few physical parts.
@@ -468,10 +546,33 @@ A causal tool is not a Simscape replacement. The difference shows once the plant
 | GNU Octave | MATLAB, the language | Scripts; most `.m` files run unchanged | MATLAB | GPL-3.0 | installer |
 | Scilab with Xcos | MATLAB-like numerics and Simulink-like diagrams | Scripts; causal blocks, plus a few Modelica (acausal) palettes | Scilab: MATLAB-like, not compatible | GPL-2.0 | installer |
 | PathSim | Simulink | Causal block diagram, in code or in the PathView browser editor | Python | MIT | pip |
+| SimuPy | Simulink | Causal block diagram in code; blocks can be SymPy expressions | Python | BSD-2-Clause | pip, but the last release (2022) fails on NumPy 2 |
 | OpenModelica | Simulink with Simscape | Acausal components from the Modelica Standard Library | Modelica | AGPL-3.0 (or OSMC-PL) | installer |
 | ModelingToolkit.jl | Simscape, as code | Acausal and symbolic | Julia | MIT core; AGPL parts since v11 | Julia's package manager |
 
-**Moving a model out of Simulink.** None of these opens a `.slx` file. The portable route is FMI (the Functional Mock-up Interface), the standard for exchanging compiled models. Simulink can export a model as an FMU (Functional Mock-up Unit), which needs a Simulink Compiler license, and OpenModelica, FMPy and PathSim's FMU blocks can run it. An FMU exported from a variable-step model also needs the free MATLAB Runtime on the machine that runs it. `requirements.txt` doesn't install FMPy; `pip install "pathsim[fmi]"` adds it.
+## FMI: how models move between these tools
+
+FMI, the [Functional Mock-up Interface](https://fmi-standard.org/), is the open standard for exchanging compiled simulation models between tools. The Modelica Association maintains it. A model exported to FMI is an FMU (Functional Mock-up Unit): a zip file holding an XML description of the model's variables, and compiled code, or C sources, that evaluate it. Wolfram's [What is FMI?](https://www.wolfram.com/system-modeler/resources/what-is-fmi/) is a readable introduction.
+
+An FMU comes in one or both of two kinds, and the kind decides who integrates the equations:
+
+- **Model exchange:** the FMU returns the state derivatives, and the tool that imports it integrates them with its own solver, error control included.
+- **Co-simulation:** the FMU carries its own solver, and the importing tool only asks it to advance one communication step at a time. Its accuracy is whatever the exporting tool built in, as the figure below shows.
+
+FMI is what connects the tools in this section:
+
+- **Out of Simulink.** None of these tools opens a `.slx` file. Simulink can export a model as an FMU, which needs a Simulink Compiler license. An FMU exported from a variable-step model also needs the free MATLAB Runtime on the machine that runs it.
+- **Out of OpenModelica.** `buildModelFMU` exports any model as model exchange, co-simulation, or both. See the OpenModelica section for the script.
+- **Into Python.** FMPy loads and runs any FMU, and `simulate_fmu("MCK.fmu")` returns the result as a NumPy array. That puts a model built in another tool next to an independent check in the same notebook.
+- **Into a block diagram.** `pathsim-fmi` wraps an FMU as a PathSim block, with ports named after the FMU's inputs and outputs. A physical plant drawn acausally in OpenModelica can then sit inside a causal control loop. PathSim 0.27.1 still ships the same blocks but marks them deprecated in favor of the separate package.
+
+**Checked:** FMPy 0.3.32 and pathsim-fmi 0.1.1, with FMI 2.0 FMUs exported by OpenModelica 1.27.1. Both also read FMI 3.0, which wasn't tested here. The m-c-k model from the OpenModelica section, run in FMPy as model exchange at a relative tolerance of 10⁻¹⁰, matches the closed-form response to 1.7 × 10⁻⁷ of x₀. The same plant with a force input and a position output was exported as a model-exchange FMU and placed inside a PathSim PID loop. Its step response matches python-control's closed-loop response to 2 × 10⁻¹² m on a 10 mm setpoint. That is one plant, written acausally in Modelica, closed in a causal loop, and checked against a third tool.
+
+<p align="center">
+  <img src="assets/openmodelica-fmu-solvers.png" alt="Error against the closed form, on a log scale, for one OpenModelica FMU of the m-c-k system run three ways in FMPy: co-simulation with the default export, which steps with explicit Euler, errs by up to 8.2e-2 of x0; co-simulation exported with the CVODE flag, by up to 4.7e-6; model exchange with FMPy's CVode at relative tolerance 1e-10, by up to 1.7e-7" width="760">
+</p>
+
+<sub>Figure: drawn for this README from FMUs exported by OpenModelica 1.27.1 and run in FMPy 0.3.32.</sub>
 
 ## GNU Octave [site](https://octave.org/) [docs](https://docs.octave.org/latest/) [packages](https://gnu-octave.github.io/packages/)
 **Use for:** Running existing MATLAB code without a MATLAB license: course material, legacy calculation scripts, and toolboxes written as plain `.m` files. The syntax, the matrix semantics, 1-based indexing and most core functions match MATLAB, so code usually runs unchanged.
@@ -535,6 +636,36 @@ t, (xs,) = scope.read()            # time [s], displacement [m]
 
 <sub>Figure: drawn for this README from two runs of the snippet above, one with PathSim's default solver and one with RKDP54.</sub>
 
+## SimuPy [repo](https://github.com/simupy/simupy) [docs](https://simupy.readthedocs.io/)
+**What it is:** Simulink-style block diagrams in Python, built around state-space systems. Each block has a state equation and an output equation, written either as NumPy functions or as SymPy expressions that SimuPy turns into NumPy code. `BlockDiagram` stacks every block's state into one vector and integrates it with a single SciPy solver. It handles continuous-time, discrete-time and switched systems, with events. BSD-2-Clause, by Benjamin Margolis, described in a 2017 paper whose source is in the repository's [`paper` folder](https://github.com/simupy/simupy/tree/master/paper). NASA's [SimuPy Flight Vehicle Toolkit](https://github.com/nasa/simupy-flight) is built on it.
+
+**The idea worth knowing:** because blocks can be SymPy expressions, equations of motion derived with `sympy.physics.mechanics` can go straight into a block, with no hand transcription. SimuPy also forbids a block with state from passing its input straight to its output, so a diagram can never contain an algebraic loop.
+
+**Why it isn't in `requirements.txt`:**
+- **The last release doesn't import on NumPy 2.** PyPI's 1.1.2, from May 2022, uses `np.Inf`, which NumPy 2.0 removed. `pip check` reports nothing wrong, because SimuPy declares `numpy>=1.11.3` with no upper bound.
+- **The fix is unreleased.** It was proposed in December 2024 and merged on GitHub in May 2026. No release has followed, and installed from that commit SimuPy reports its version as 1.1.1.
+- **Even from that commit, the symbolic API fails on SymPy 1.14.** That API is the main reason to choose SimuPy. A symbolic block with no inputs, or with no state, fails inside SymPy (`Index not valid with an empty array`). A symbolic block also never sets the `num_events` attribute that `BlockDiagram` reads.
+- **Its own test suite fails.** From that commit, on the stack pinned here, it gives 20 failures, 3 errors and 31 passes. A 2022 stack (NumPy 1.23, SciPy 1.9, SymPy 1.10) gives the same counts, so the failures predate NumPy 2.
+- **The NASA toolkit has stopped too.** It pins `numpy<2`, and its last commit was in December 2024.
+
+**Checked:** the numeric API, installed from the merged commit (`1c2c43a`). The m-c-k free vibration from the PathSim section matches the closed form to 3.7 × 10⁻⁷ of x₀ with the default solver, `dopri5` at a relative tolerance of 10⁻⁶. A tighter tolerance needs a larger `nsteps` as well; see the gotchas.
+
+**SimuPy and PathSim compared.** Both are causal, so both stand in for Simulink, not Simscape.
+
+| | SimuPy | PathSim |
+|---|---|---|
+| How a diagram is solved | One state vector for the whole diagram, integrated by one SciPy solver | Each block keeps its own state, and the simulation advances all of them with one of its own solvers. Its README says blocks and solvers can be swapped during a run |
+| Direct feedthrough | Not allowed in a block with state, so there are no algebraic loops. A PID's proportional path needs its own stateless block | Allowed. Algebraic loops are detected and solved by iteration |
+| Symbolic models | Blocks can be SymPy expressions (broken on current SymPy, above) | None; blocks are NumPy code |
+| Solvers | SciPy's legacy `ode` interface, and only its two explicit Runge–Kutta methods, `dopri5` and `dop853`, because SimuPy needs a step callback that only they provide. `lsoda` raises an error, so there is no stiff solver | About 30 of its own: fixed-step and adaptive Runge–Kutta, and implicit ESDIRK and BDF methods for stiff systems |
+| Events | Zero-crossing events and switched systems | Zero-crossing, scheduled and conditional events |
+| Derivatives | None built in | Forward-mode automatic differentiation, a `Value` class, shipped in 0.8 and was gone by 0.12. In 0.27.1, Jacobians not supplied by a block come from finite differences |
+| Graphical editor | None | PathView, in the browser |
+| Add-on packages | NASA's SimuPy Flight Vehicle Toolkit | pathsim-fmi, pathsim-rf, pathsim-chem, pathsim-flight and pathsim-vehicle on PyPI. pathsim-vehicle pins `numpy<2`, so it can't join the pins here |
+| Releases | 1.1.2, May 2022, the last | 87 since August 2024; 0.27.1 in October 2026 |
+
+Use PathSim for new work. SimuPy's design is coherent, and its link to SymPy is a real strength, but the code hasn't kept up with NumPy or SymPy. To run an existing SimuPy model, give it its own NumPy 1.x environment, and check it against a closed form before trusting it, because its own tests fail there too.
+
 ## python-control [docs](https://python-control.readthedocs.io/) [repo](https://github.com/python-control/python-control)
 **Use for:** What MATLAB's Control System Toolbox does: transfer-function, state-space and zero-pole-gain models; series, parallel and feedback connections; step, impulse and forced responses; Bode, Nyquist and root-locus plots; gain and phase margins; pole placement, LQR and Kalman gains; and continuous-to-discrete conversion. `control.matlab` provides the MATLAB names (`tf`, `ss`, `step`, `bode`, `lsim`, `margin`), so a MATLAB script ports almost line for line. Install and import it as `control` (`import control as ct`). BSD-3-Clause.
 
@@ -547,7 +678,32 @@ t, (xs,) = scope.read()            # time [s], displacement [m]
 
 **Where it fits:** Physical systems whose layout you would rather draw than derive: a drivetrain with a clutch, a hydraulic circuit, a thermal network, an electromechanical actuator. In Modelica, the m-c-k system above is four components (a fixed point, a spring, a damper and a mass) and four `connect` statements, with no equation written by hand. In PathSim you write x'' = −(c/m)x' − (k/m)x first. It is dual-licensed: AGPL-3.0 for anyone, or the OSMC-PL for members of the consortium behind it. The Modelica Standard Library is BSD-3-Clause. The current release is 1.27.1 (September 2026).
 
-**Not checked here.** It is a standalone install (a Windows installer, or the OpenModelica apt repository or Docker images on Linux), not a pip package, so `requirements.txt` doesn't include it.
+**Install:** a standalone program, not a pip package: the Windows installer, or the OpenModelica apt repository or Docker images on Linux. The `-minimal` Docker image holds the compiler only. Install the Modelica Standard Library with `installPackage(Modelica)`, which downloads it, or point `setModelicaPath` at a clone of the [ModelicaStandardLibrary](https://github.com/modelica/ModelicaStandardLibrary) repository. `OMPython`, which is in `requirements.txt`, needs OpenModelica's `omc` running locally or in a container. OpenModelica refuses to serve OMPython's ZeroMQ connection as root, so give a container a `--user`.
+
+**Checked:** 1.27.1 with Modelica Standard Library 4.1.0, in the official Docker image on Linux. The m-c-k model below is the four components and four `connect` statements described above. `checkModel` reports 23 equations in 23 variables, 13 of them trivial, and none were written by hand. Simulated with DASSL at a tolerance of 10⁻¹⁰, it matches the closed-form response to 1.1 × 10⁻⁷ of x₀. OMPython 4.1.0, on the host, drove the same OpenModelica through its ZeroMQ interface and got the same result. The FMUs from the script below are the ones checked in the FMI section.
+
+```modelica
+model MCK "Mass on a spring and damper, released from x0 = 10 mm"
+  import TC = Modelica.Mechanics.Translational.Components;
+  TC.Fixed fixed;
+  TC.Spring spring(c = 100) "N/m";
+  TC.Damper damper(d = 2) "N.s/m";
+  TC.Mass mass(m = 1, s(start = 0.01, fixed = true), v(start = 0, fixed = true)) "kg";
+equation
+  connect(fixed.flange, spring.flange_a);
+  connect(fixed.flange, damper.flange_a);
+  connect(spring.flange_b, mass.flange_a);
+  connect(damper.flange_b, mass.flange_a);
+end MCK;
+```
+
+To export it as an FMU, run `omc export.mos` with this script:
+
+```
+loadFile("MCK.mo");
+setCommandLineOptions("--fmiFlags=s:cvode");  // without it, co-simulation steps with explicit Euler
+buildModelFMU(MCK, version = "2.0", fmuType = "me_cs");
+```
 
 ---
 
@@ -602,6 +758,16 @@ t, (xs,) = scope.read()            # time [s], displacement [m]
   exactly symmetric and, if it is, use the symmetric eigensolver, so `eig(K)` and `eig(K, M)` there
   return real eigenvalues and orthogonal mode shapes. `scipy.linalg.eig` never makes that switch.
   (The MATLAB check is exact: a K that is symmetric only to round-off takes the general path there too.)
+- **scikit-fem's `lame_parameters(E, ν)` makes a 2D model plane strain.** It returns the
+  three-dimensional λ and μ, which in 2D describe a body that can't strain out of plane. That is right
+  for a long cylinder and wrong for a thin plate, which needs `plane_stress(E, ν)`. Modeled as a 2D
+  solid 50 mm thick, the 2 m cantilever from the CALFEM section deflects 25.600 mm in plane stress and
+  23.286 mm with `lame_parameters`, 9% too stiff (a factor of 1 − ν²), with no warning.
+- **scikit-fem's `plane_stress` changed meaning in 12.0.2, a patch release.** Up to 12.0.1 it returned
+  an equivalent E and ν, meant for `linear_elasticity(*lame_parameters(*plane_stress(E, nu)))`. From
+  12.0.2 it returns λ and μ directly, for `linear_elasticity(*plane_stress(E, nu))`. Either idiom on
+  the other version runs without error and puts displacements out by a factor of 10¹¹ or more. That
+  error is loud, but only a check catches it. `requirements.txt` pins 12.0.2.
 - **PathSim's default solver is fixed-step and 2nd order** (`SSPRK22` at dt = 0.01 s). Simulink's
   default is variable-step, so a model carried across keeps running, gives no warning, and loses
   accuracy. With ζ = 0.1, the m-c-k model's peak error is 0.6% of x₀ at ωn = 10 rad/s, 16% at
@@ -610,6 +776,21 @@ t, (xs,) = scope.read()            # time [s], displacement [m]
 - **PathSim's `PID(f_max=...)` is in rad/s, not Hz.** The derivative term is Kd·s/(1 + s/f_max), so
   its filter pole sits at f_max rad/s. The block's own docstring calls `f_max=1e3` "cutoff at 1kHz";
   that corner is at 159 Hz.
+- **OpenModelica's co-simulation FMUs step with explicit Euler by default.** Unless the model is
+  exported with `--fmiFlags=s:cvode`, the FMU takes one Euler step per communication interval, with
+  no error control and no warning. A tolerance passed by the importing tool changes nothing. For
+  the m-c-k system the error is 8.2% of x₀ at a 4 ms step, 1.9% at 1 ms and 0.19% at 0.1 ms, first
+  order. Exported with the flag, it is 4.7 × 10⁻⁶ at 4 ms. Model exchange avoids the question,
+  because the importing tool integrates. The FMU's own source says it: with no flags file, it falls
+  back to `S_EULER`.
+- **FMPy's default tolerance comes from the FMU's default experiment,** 10⁻⁶ in OpenModelica's export.
+  That left the model-exchange m-c-k run 6 × 10⁻⁴ of x₀ off. Pass `relative_tolerance` to
+  `simulate_fmu`.
+- **SimuPy returns a truncated result when its solver runs out of steps.** The default
+  `nsteps = 500` caps the solver's steps for the whole run between events, and a tight `rtol` uses
+  it up. SimuPy then warns `Integrator quit unsuccessfully` and returns the trajectory so far: asked
+  for 3 s of m-c-k at `rtol = 1e-10`, it returned 1.51 s. An error check over the returned points
+  still passes. Check `res.t[-1]`, and raise `nsteps` with the tolerance.
 - **python-control's `step_info` measures on its own coarse time grid.** For the m-c-k system it
   takes 276 points over 6.9 s, steps over the peak, and reports a 72.50% overshoot where theory gives
   72.92%. Pass `T=np.linspace(0, t_end, n)` fine enough to resolve the peak. `forced_response` also
