@@ -18,6 +18,7 @@ in a traveller.
 | `MECHANICAL-DESIGN-CHECKLIST__20260816-0939.md` | Reference decision tree (§0–§10 + Appendices A–E). The method. | **Reference — do not edit** unless explicitly asked. |
 | `MECHANICAL-DESIGN-TRAVELLER__20260816-0931.md` | Blank per-part design record template. | **Template — never fill in place.** Copy it. |
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
+| `Design_Desk_Smoke_Test.ipynb` | Environment smoke test: every pinned analysis package against a known answer, installed versions against the pins. Raises if any check fails. | Re-run after any change to `requirements.txt`; commit with outputs. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
 | `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
 | `LICENSE` | MIT, for the repository's own documents and code. Third-party images keep their own licenses (see the README's License section). | Don't change without being asked. |
@@ -120,8 +121,9 @@ a standalone program and is not in the file either; `OMPython` is, and needs Ope
 (locally, or in the `openmodelica/openmodelica` Docker image run with `--user`, since `omc` refuses
 to serve ZeroMQ as root). SimuPy is compared in the README but deliberately not pinned.
 
-If a notebook needs a package that isn't listed, add it to `requirements.txt` with an exact `==`
-pin, then re-run `pip install -r requirements.txt`, `pip check`, and every notebook.
+Every change to `requirements.txt`, a new pin or a version bump, ends the same way: a fresh venv
+from the file, `pip install -r requirements.txt`, `pip check`, and every notebook re-executed
+headless, `Design_Desk_Smoke_Test.ipynb` included.
 
 Execute a notebook headless — this is the closest thing to a test run:
 
@@ -131,6 +133,48 @@ MPLBACKEND=Agg jupyter nbconvert --to notebook --execute <notebook>.ipynb --inpl
 
 It must finish without errors and every closed-form check must print `OK`
 (the example ends with `all checks passed`). Do not commit `.venv/` or `.ipynb_checkpoints/`.
+
+`Design_Desk_Smoke_Test.ipynb` is the environment-wide version: every pinned analysis package
+against a known answer, plus installed versions against the pins. Its last cell raises if any
+check fails, so `nbconvert` exits non-zero. Checks that need GNU Octave or OpenModelica report
+`SKIP`, which is not a pass: say so when you report a run. Its OpenModelica checks use a local
+`omc`, or one serving ZeroMQ at `OMC_PORT`, with `OM_WORKDIR` shared at the same path when `omc`
+runs in Docker.
+
+## Adding a package to the map
+
+A package earns a row in the README map and a pin in `requirements.txt` only when all of these
+hold. Record the evidence in its README section's **Checked:** line.
+
+1. **It does a job no current row does.** Name the row it adds, or the row it splits, and say
+   what it does that the existing entry can't. Popularity, polish and a good gallery are not
+   reasons.
+2. **It installs alongside every existing pin.** Add an exact `==` pin, build a fresh venv, and
+   run `pip check`. Then import it and run it: `pip check` reads only declared metadata, so a
+   package that declares `numpy>=1.11` but breaks on NumPy 2 passes it (SimuPy did). A package
+   whose own dependencies pin below ours (`numpy<2`, as pathsim-vehicle does) can't join.
+3. **It reproduces a known answer, in a run you did.** Compare against a closed form, a series
+   solution or an established package with `math.isclose`, at a tolerance the method should meet,
+   not one loosened until it passes. Write the value, the reference and the error in the README.
+   Use a shared benchmark when one fits (the 2 m cantilever, the m-c-k system, the Lamé cylinder)
+   so the result also cross-checks the other tools, and add the same check to
+   `Design_Desk_Smoke_Test.ipynb`, with the package's import name in its `IMPORTS` table.
+4. **It works on the stack we pin.** Its current release must support the pinned NumPy, SciPy and
+   SymPy. A fix that exists only on an unreleased branch doesn't count.
+5. **Its license is recorded,** and every image taken from its documentation is credited under
+   the image with that license.
+6. **The traps found on the way are written down:** in the README Gotchas, and in short form
+   under "Library traps already found" above.
+
+Two exceptions:
+
+- **Not pip-installable** (standalone programs, Julia packages, conda-only builds): it may have a
+  row, but say so in the `requirements.txt` header and the README Setup section, and mark its
+  section **Not checked here** until someone runs it. Its Python bridge (oct2py, OMPython) is
+  pinned like any other package, and its smoke-test check skips when the program is missing.
+- **Compared, not pinned:** a package that fails rule 2 or 4 may still be described when the
+  comparison helps a reader choose (SimuPy against PathSim). Say plainly why it isn't pinned,
+  with the evidence, and keep it out of the map table.
 
 ## Known inconsistencies (do not propagate)
 

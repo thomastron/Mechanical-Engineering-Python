@@ -44,6 +44,14 @@ To run a notebook headless and check that it still passes:
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Cantilever_Beam_Analysis_Triangular_Load.ipynb --inplace
 ```
 
+To check the whole environment at once, run the smoke test the same way:
+
+```bash
+MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Design_Desk_Smoke_Test.ipynb --inplace
+```
+
+In [`Design_Desk_Smoke_Test.ipynb`](Design_Desk_Smoke_Test.ipynb), every pinned analysis package solves a problem with a known answer. Nine packages solve the same cantilever. The rest cover section properties, the Lamé cylinder, vibration, a PID loop, desk calculations, fatigue cycle counting, gear geometry, a waveguide, Octave and OpenModelica. Each answer is compared with a closed form or another package; the committed run has 138 checks. The notebook also checks every installed version against its pin, and ends with a statement computed from the run, not typed. If any check fails, the last cell raises an error and the command exits non-zero. Checks that need GNU Octave or OpenModelica are reported as skipped, not passed, when those programs aren't installed.
+
 ## 5. Using it with an AI assistant
 Load these files into an AI assistant as context and point it at a textbook problem. [AGENTS.md](AGENTS.md) holds the rules it follows here, and [CLAUDE.md](CLAUDE.md) points Claude Code to the same file. The rules: frame the problem with the checklist before computing, route out any specialized regime, check every result independently, audit the Assumption Ledger against the answer, and leave sign-off to the engineer.
 
@@ -428,7 +436,7 @@ From the project's gallery, all solid mechanics:
 
 **Where it fits:** RF and microwave work. Its README describes no magnetostatic or low-frequency eddy-current solver, so coils, iron cores and motors are better served by a FEniCSx magnetostatics model like the one above. AGPL-3.0, with commercial terms available. A young, fast-moving project that began as a Rust port of EMerge.
 
-**Checked:** 0.24.0. A 30 mm length of WR-90 waveguide at 8, 10 and 12 GHz gave |S₁₁| = 0.0000 and |S₂₁| = 1.0000, and an S₂₁ phase within 0.005° of TE₁₀ theory (−βL), after a constant 180° from port 2's polarity convention. The solve took under 2 s.
+**Checked:** 0.24.0. A 30 mm length of WR-90 waveguide at 8, 10 and 12 GHz gave |S₁₁| = 0.0000 and |S₂₁| = 1.0000, and an S₂₁ phase within 0.006° of TE₁₀ theory (−βL), after a constant 180° from port 2's polarity convention. Meshing and the three-frequency solve took about 3 s.
 
 ## SymPy
 **Use for:** Symbolic algebraic derivations, calculus for analytical beam theory, and constructing equations of motion via Kane's or Lagrange's methods for rigid body multibody dynamics.
