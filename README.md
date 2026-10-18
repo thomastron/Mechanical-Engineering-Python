@@ -891,4 +891,4 @@ shape 2.3, scale 1.2e6 → B10 life = 4.511e+05 cycles
 
 MIT, for the documents and code written for this repository. See [LICENSE](LICENSE).
 
-Images from other sources keep their own licenses, credited under each one above. The problem figure in `assets/cantileverBeam.jpg` comes from Hibbeler's *Mechanics of Materials* and is not covered by the MIT license.
+Images from other sources keep their own licenses, credited under each one above. The worked example's problem figure, `assets/cantilever-triangular-load.png`, was drawn for this repository and is covered by the MIT license; the problem itself follows R. C. Hibbeler, *Mechanics of Materials*, Fig. 1–4, credited in the notebook.
