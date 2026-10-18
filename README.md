@@ -36,7 +36,8 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` pins every Python package in the visual map below. The map's other entries are not pip packages: GXBeam is a Julia package, FEniCSx has no pip wheels (see its section for conda and Docker), and GNU Octave and OpenModelica are standalone programs. `oct2py` needs Octave installed and on the PATH (Debian/Ubuntu: `sudo apt install octave`), and `OMPython` needs OpenModelica. SimuPy is compared below but not pinned, because its last release doesn't import on NumPy 2. On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
+`requirements.txt` pins every Python package in the visual map below. The map's other entries are not pip packages: 
+> GXBeam is a Julia package, FEniCSx has no pip wheels (see its section for conda and Docker), and GNU Octave and OpenModelica are standalone programs. `oct2py` needs Octave installed and on the PATH (Debian/Ubuntu: `sudo apt install octave`), and `OMPython` needs OpenModelica. SimuPy is compared below but not pinned, because its last release doesn't import on NumPy 2. On Linux, `openseespy` also needs the system BLAS and LAPACK libraries, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 
 To run a notebook headless and check that it still passes:
 
