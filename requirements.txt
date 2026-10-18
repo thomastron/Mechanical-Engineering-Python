@@ -5,7 +5,10 @@
 # Not included: GXBeam (a Julia package, not Python) and FEniCSx (no pip wheels;
 #   use conda-forge fenics-dolfinx or the dolfinx/dolfinx Docker image).
 #   GNU Octave and OpenModelica are standalone programs, not pip packages;
-#   oct2py below needs Octave on the PATH (Debian/Ubuntu: sudo apt install octave).
+#   oct2py below needs Octave on the PATH (Debian/Ubuntu: sudo apt install octave),
+#   and OMPython needs OpenModelica's omc.
+#   SimuPy is compared in the README but not pinned: its last release (1.1.2, 2022)
+#   fails to import on NumPy 2, and its symbolic API fails on current SymPy.
 # Linux only: openseespy also needs the system BLAS/LAPACK libraries, and gmsh
 #   (pulled in by EasyFEA and calfem-python) needs libGLU and libXft
 #   (Debian/Ubuntu: sudo apt install libblas3 liblapack3 libglu1-mesa libxft2)
@@ -42,6 +45,10 @@ calfem-python==3.6.16
 EasyFEA[viz]==7.0.0
 rapidfem==0.24.0
 
+# Weak-form FEA in pure Python (imports as skfem). plane_stress() changed meaning
+# in 12.0.2; read the README gotcha before moving this pin.
+scikit-fem==12.0.2
+
 # Linkage, cam and spur-gear kinematics
 mechanism==1.1.10
 
@@ -54,6 +61,12 @@ wetb==0.1.33
 control==0.10.2
 pathsim==0.27.1
 oct2py==6.1.1
+
+# FMI: run exported models (FMUs) in Python, and as PathSim blocks. Drive
+# OpenModelica from Python (needs OpenModelica itself, which pip can't install).
+fmpy==0.3.32
+pathsim-fmi==0.1.1
+OMPython==4.1.0
 
 # Running notebooks, interactively or headless
 jupyterlab==4.6.4
