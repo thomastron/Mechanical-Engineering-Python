@@ -166,6 +166,14 @@ hold. Record the evidence in its README section's **Checked:** line.
 6. **The traps found on the way are written down:** in the README Gotchas, and in short form
    under "Library traps already found" above.
 
+**How a package section reads.** The heading is the package name alone, with its links on the
+next line, so the map's anchors stay short (`#scikit-fem`, not `#scikit-fem-docs-gallery-repo`).
+Then **Use for:** in a sentence or two, **Where it fits:** against its neighbours in the map, and
+**Checked:** with the numbers. Link the package's docs rather than restating its feature list.
+Put a snippet longer than about 15 lines, or a table only some readers need, in a `<details>`
+block. Images must show what the package computes; no logos or banners. Every new package also
+gets a linked row in the map table, in its group.
+
 Two exceptions:
 
 - **Not pip-installable** (standalone programs, Julia packages, conda-only builds): it may have a
