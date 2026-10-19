@@ -4,7 +4,7 @@ A design checklist, a design-record template, and a worked Python FEA example ch
 
 This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off.
 
-There is one worked example so far. The rest of this page maps [Python packages to design jobs](#python-for-the-design-desk), compares [free alternatives to MATLAB and Simulink](#matlab-and-simulink-alternatives), and lists [gotchas](#gotchas): traps that run without an error and still give a wrong answer.
+There is one worked example so far. The rest of this page maps [Python packages to design jobs](#python-for-the-design-desk), compares [free alternatives to MATLAB and Simulink](#matlab-and-simulink-alternatives), and lists [gotchas](#gotchas): traps that run without an error and still give a wrong answer. A separate file, [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md), surveys the same ground for pipe networks, rivers, stormwater, groundwater and fluid power.
 
 ## 1. The design and analysis framework
 There are two documents: reference material, and the working record for a part.
@@ -62,6 +62,8 @@ Load these files into an AI assistant as context and point it at a textbook prob
 # Python for the Design Desk
 
 Organized by the job, not the package. Each name links to its section.
+
+Hydraulics has its own map. [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md) covers water distribution networks (EPANET, through `wntr` and `epyt`), pipe, valve and pump sizing with `fluids`, open channels and floodplains (HEC-RAS, `anuga`), stormwater and sewers (`pyswmm`), groundwater (`flopy`), CFD, and fluid power. It is a survey, not a checked set like this one: none of its packages are pinned in `requirements.txt`, and none have been run here yet.
 
 | The job | Reach for |
 | --- | --- |

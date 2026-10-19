@@ -20,6 +20,7 @@ in a traveller.
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
 | `Design_Desk_Smoke_Test.ipynb` | Environment smoke test: every pinned analysis package against a known answer, installed versions against the pins. Raises if any check fails. | Re-run after any change to `requirements.txt`; commit with outputs. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
+| `PYTHON-FOR-HYDRAULICS.md` | Companion survey of Python for hydraulics: pipe networks, `fluids` component sizing, open channel, stormwater, groundwater, CFD, fluid power. Nothing in it is pinned or has been run here. | Reference, not a checked map. A package from it joins the README map and `requirements.txt` only through "Adding a package to the map" below. |
 | `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
 | `LICENSE` | MIT, for the repository's own documents and code. Third-party images keep their own licenses (see the README's License section). | Don't change without being asked. |
 
@@ -189,5 +190,11 @@ Two exceptions:
 - The example notebook mentions an anaStruct model of the same beam (marked "not in this
   repo"). It is not in the repo, and the notebook uses PlaneSections only. Its checks are
   against the closed form, not another package. Don't cite the anaStruct comparison as checked.
+- `PYTHON-FOR-HYDRAULICS.md` was written in an Obsidian vault. Its `[[PYTHON-FOR-THE-DESIGN-DESK]]`
+  links point to a file that is no longer in the repo; that content is now the README's "Python for
+  the Design Desk" section. Its install notes and versions describe a Windows `.venv` on Python
+  3.13, checked against PyPI on 2026-09-12, not the Python 3.11 stack `requirements.txt` was
+  tested on. Its gotchas are flagged from documentation, not reproduced. Treat every version, wheel
+  and gotcha in it as unverified until checked here.
 
 When referencing files, check that they exist.
