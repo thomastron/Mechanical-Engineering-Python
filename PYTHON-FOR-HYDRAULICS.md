@@ -12,12 +12,15 @@ A roadmap of what exists in the Python hydraulics ecosystem, **what each tool ac
 which one to reach for. Written for picking this up after months away — every entry says what the
 package can compute, not just what it is.
 
-Companion to [[PYTHON-FOR-THE-DESIGN-DESK]], which covers stress, beams and calculation records.
+Companion to [Python for the Design Desk](README.md#python-for-the-design-desk), the package map in
+this repository's README, which covers stress, beams and calculation records.
 Same idea, different domain.
 
-> **Status in this vault: none of this is installed.** The `.venv` (Python 3.13.0) was built for
-> solid mechanics. Every version and wheel note below was checked against PyPI on **2026-09-12**;
-> nothing has been import-tested here yet. Install commands are at the bottom.
+> **Status: none of this is installed or tested here.** None of these packages is pinned in
+> `requirements.txt` (PyVista arrives there only as an EasyFEA dependency), whose stack is tested on
+> Python 3.11. Every version and wheel note below was
+> checked against PyPI on **2026-09-12** for Python 3.13 on Windows; nothing has been import-tested
+> yet. Install commands are at the bottom.
 
 The field splits into two traditions that barely share vocabulary: **water resources** hydraulics
 (EPANET, HEC-RAS, SWMM — pipe networks, rivers, floods) and **fluid power** hydraulics (cylinders,
@@ -100,16 +103,16 @@ It is EPANET plus a scenario and resilience layer.
 - **Geospatial**: converts to GeoPandas, intersects the network with hazard rasters and polygons.
 - Network graphics, animation, and interactive Plotly output.
 
-![WNTR network plot|560](https://usepa.github.io/WNTR/_images/plot_basic_network.png)
+<img src="https://usepa.github.io/WNTR/_images/plot_basic_network.png" alt="WNTR network plot" width="560">
 
-![WNTR valve segmentation|560](https://usepa.github.io/WNTR/_images/plot_valve_segment_attributes.png)
+<img src="https://usepa.github.io/WNTR/_images/plot_valve_segment_attributes.png" alt="WNTR valve segmentation" width="560">
 
 *Valve segmentation — which part of the network isolates when a given valve closes. Tedious by hand,
 nearly free once the model is in Python.*
 
-![WNTR fragility curve|420](https://usepa.github.io/WNTR/_images/fragility_curve.png) ![WNTR pump curve|420](https://usepa.github.io/WNTR/_images/plot_pump_curve.png)
+<img src="https://usepa.github.io/WNTR/_images/fragility_curve.png" alt="WNTR fragility curve" width="420"> <img src="https://usepa.github.io/WNTR/_images/plot_pump_curve.png" alt="WNTR pump curve" width="420">
 
-![WNTR interactive network|500](https://usepa.github.io/WNTR/_images/plot_plotly_network.png)
+<img src="https://usepa.github.io/WNTR/_images/plot_plotly_network.png" alt="WNTR interactive network" width="500">
 
 ```python
 import wntr
@@ -129,8 +132,8 @@ results.node['pressure']                        # DataFrame: time x node
 
 **v2.3.5.2 · KIOS / OpenWaterAnalytics · pure Python · [repo](https://github.com/OpenWaterAnalytics/EPyT)**
 
-==A faithful wrapper over the EPANET programmer's toolkit, one Python method per toolkit function.==
-==Where WNTR gives you an opinionated model object, EPyT gives you the API surface==.
+**A faithful wrapper over the EPANET programmer's toolkit, one Python method per toolkit function.
+Where WNTR gives you an opinionated model object, EPyT gives you the API surface.**
 
 **What it does**
 
@@ -144,7 +147,7 @@ results.node['pressure']                        # DataFrame: time x node
 Reach for EPyT when writing a control loop or a research algorithm against EPANET, and WNTR when you
 want scenarios, resilience and geospatial work.
 
-![EPyT network|600](https://user-images.githubusercontent.com/2945956/154067349-3aed266f-3a23-4573-8b93-db0b4f224964.png)
+<img src="https://user-images.githubusercontent.com/2945956/154067349-3aed266f-3a23-4573-8b93-db0b4f224964.png" alt="EPyT network" width="600">
 
 ### `viswaternet` — network visualisation
 
@@ -154,7 +157,7 @@ One job, done well: turning a WNTR model into a readable map. Colour and size no
 attribute, overlay pump, valve and tank symbols, discretise continuous data into legend classes, and
 export animations. Worth having the moment a network stops fitting on one screen.
 
-![VisWaterNet example|460](https://raw.githubusercontent.com/tylertrimble/viswaternet/main/logo/readme1.png) ![VisWaterNet example|460](https://raw.githubusercontent.com/tylertrimble/viswaternet/main/logo/readme2.png)
+<img src="https://raw.githubusercontent.com/tylertrimble/viswaternet/main/logo/readme1.png" alt="VisWaterNet example" width="460"> <img src="https://raw.githubusercontent.com/tylertrimble/viswaternet/main/logo/readme2.png" alt="VisWaterNet example" width="460">
 
 ### `oopnet` — object-oriented EPANET
 
@@ -172,8 +175,7 @@ building on it. WNTR covers most of the same ground and is actively maintained.
 
 **v1.3.1 · Caleb Bell · pure Python · [docs](https://fluids.readthedocs.io/)**
 
-The single most useful install on this page for mechanical work, and the one already flagged as
-"worth knowing" in [[PYTHON-FOR-THE-DESIGN-DESK]]. It is not a network solver — it is the correlation
+The single most useful install on this page for mechanical work. It is not a network solver — it is the correlation
 library that sits underneath one. Pure Python, correlations cited to source.
 
 **What it covers, by submodule**
@@ -195,14 +197,14 @@ library that sits underneath one. Pure Python, correlations cited to source.
 | `units`                              | **The whole library wrapped in `pint`** — see below                                                                                                                                                   |
 | `numba`, `vectorized`                | JIT-compiled and array-broadcast variants of every function                                                                                                                                           |
 
-![fluids rounded bend|290](https://fluids.readthedocs.io/_images/bend_rounded.png) ![fluids mitre bend|290](https://fluids.readthedocs.io/_images/bend_miter.png) ![fluids conical contraction|290](https://fluids.readthedocs.io/_images/contraction_conical.png)
+<img src="https://fluids.readthedocs.io/_images/bend_rounded.png" alt="fluids rounded bend" width="290"> <img src="https://fluids.readthedocs.io/_images/bend_miter.png" alt="fluids mitre bend" width="290"> <img src="https://fluids.readthedocs.io/_images/contraction_conical.png" alt="fluids conical contraction" width="290">
 
 *The docs draw the geometry each correlation applies to, which is the part that is easy to get wrong
 from a bare formula.*
 
-![fluids Crane friction factor|470](https://fluids.readthedocs.io/_images/ft_Crane_plot.png)
+<img src="https://fluids.readthedocs.io/_images/ft_Crane_plot.png" alt="fluids Crane friction factor" width="470">
 
-**`fluids.units` connects straight to work already done here.** This vault already uses `pint` for
+**`fluids.units` connects straight to work already done here.** This repository already uses `pint` for
 unit safety in hand calculations. `fluids.units` exposes every function with pint quantities in and
 out, so a friction factor or a valve size participates in the same dimensional checking as the rest
 of a calculation record, and pairs with `handcalcs` the same way.
@@ -219,13 +221,13 @@ K  = K_gate_valve_Crane(D1=0.2*u.m, D2=0.2*u.m, angle=0*u.degrees)
 Note the registry: `fluids.units` binds to pint's **default** registry. Mixing it with a separately
 constructed `UnitRegistry()` raises a cross-registry error. Use
 `from pint import _DEFAULT_REGISTRY as u` everywhere, and add the short-unit definitions from the
-`handcalcs` gotcha in [[PYTHON-FOR-THE-DESIGN-DESK]] to that same registry.
+`handcalcs` gotcha in the [README](README.md#handcalcs-units-and-pdf-export) to that same registry.
 
 ### `ht`, `thermo`, `CoolProp` — the rest of the stack
 
 `ht` 1.2.0 (heat transfer correlations) and `thermo` 0.6.1 (phase equilibria, transport properties)
 are the same author and the same design. `CoolProp` 8.0.0 is the reference thermophysical property
-library, but it **has no Python 3.13 wheel on Windows** — it stops at cp312. On this venv either use
+library, but it **has no Python 3.13 wheel on Windows** — it stops at cp312. On 3.13, either use
 `thermo`, or make a separate 3.12 environment for property lookups. For plain water at ordinary
 temperatures, `fluids` and `thermo` are enough on their own.
 
@@ -261,7 +263,7 @@ converts results to **VTK** for ParaView or PyVista. Its point is comparison: pu
 models' output into one format so you can difference them. Also handles terrain and Manning's *n*
 fields, and calibration loops.
 
-![pyHMT2D velocity field|540](https://raw.githubusercontent.com/psu-efd/pyHMT2D/main/logo/pyhmt2d_logo_vel_color_vector.png)
+<img src="https://raw.githubusercontent.com/psu-efd/pyHMT2D/main/logo/pyhmt2d_logo_vel_color_vector.png" alt="pyHMT2D velocity field" width="540">
 
 ### `anuga` — solve the shallow water equations
 
@@ -324,7 +326,7 @@ with Simulation('model.inp') as sim:
         pump.target_setting = 1.0 if j1.depth > 2.0 else 0.0
 ```
 
-![pyswmm|270](https://raw.githubusercontent.com/pyswmm/pyswmm/master/docs/source/_static/type-logo-black.png)
+<img src="https://raw.githubusercontent.com/pyswmm/pyswmm/master/docs/source/_static/type-logo-black.png" alt="pyswmm" width="270">
 
 ### `swmmio` and `swmm-api`
 
@@ -333,7 +335,7 @@ annotated flood maps and animations. `swmm-api` 0.4.74 is the stronger read, wri
 for the `.inp` and `.rpt` files themselves. Use `swmm-api` to build models, `swmmio` to look at them,
 `pyswmm` to run them.
 
-![swmmio flood map|560](https://raw.githubusercontent.com/aerispaha/swmmio/master/docs/_static/img/flooded_anno_example.png)
+<img src="https://raw.githubusercontent.com/aerispaha/swmmio/master/docs/_static/img/flooded_anno_example.png" alt="swmmio flood map" width="560">
 
 ---
 
@@ -348,14 +350,14 @@ SEAWAT, MODPATH, PEST). Builds, runs and post-processes models; writes and reads
 plots plan views, cross sections and particle tracks; exports to VTK, shapefile and NetCDF. There is
 no serious alternative, and `get-modflow` fetches the compiled executables for you.
 
-![FloPy quickstart|500](https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/quickstart.png)
+<img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/quickstart.png" alt="FloPy quickstart" width="500">
 
 ---
 
 ## F. Free surface and CFD
 
 Only when the depth-averaged assumption fails — a hydraulic jump in detail, air entrainment,
-sloshing, flow around a structure. ==All of these are heavy installs and multi-day learning curves.==
+sloshing, flow around a structure. **All of these are heavy installs and multi-day learning curves.**
 
 | Package | What it is | When it earns the cost |
 |---|---|---|
@@ -385,14 +387,14 @@ Better to know that now than to go looking.
 - Commercial: Simscape Fluids, Amesim, Automation Studio. Out of scope here.
 
 **Suggested route:** `fluids` plus `scipy` for sizing and simple transients, Modelica when you need a
-real circuit model. The SciPy recipes in [[PYTHON-FOR-THE-DESIGN-DESK]] apply directly — `solve_ivp`,
+real circuit model. The [SciPy recipes in the README](README.md#scipy-does-more-than-most-people-use-it-for) apply directly — `solve_ivp`,
 `root` and `brentq` are the same three calls that do the work here.
 
 ---
 
-## Install feasibility on this `.venv`
+## Install feasibility
 
-Python **3.13.0**, Windows. Checked against PyPI 2026-09-12. This is where the surprises are.
+Checked against PyPI on 2026-09-12 for Python **3.13.0** on Windows. This is where the surprises are.
 
 | Package | Version | Wheel situation on py3.13 Windows |
 |---|---|---|
@@ -412,14 +414,14 @@ Python **3.13.0**, Windows. Checked against PyPI 2026-09-12. This is where the s
 | `CoolProp` | 8.0.0 | **No cp313 wheel, stops at cp312.** Use `thermo`, or a separate 3.12 env |
 | `pysph` | 1.0b2 | **Source distribution only.** Needs a compiler; expect a fight on Windows |
 
-The `openseespy` lesson from [[PYTHON-FOR-THE-DESIGN-DESK]] applies: a wheel that installs is not the
+The `openseespy` lesson from the [README's setup notes](README.md#4-setup) applies: a wheel that installs is not the
 same as a wheel that imports. Import-test each one and record the result here.
 
 ---
 
 ## Gotchas — expected, not yet confirmed here
 
-Flagged from the packages' own documentation. **None has been reproduced in this `.venv`.** Confirm
+Flagged from the packages' own documentation. **None has been reproduced yet.** Confirm
 before trusting, and date the entry when you do.
 
 - **Demand-driven analysis lies under low pressure.** EPANET's default model delivers full demand
@@ -448,39 +450,43 @@ before trusting, and date the entry when you do.
 
 ## Commands
 
+Run these in a virtual environment of their own (activate it with `.venv\Scripts\activate` on
+Windows, `source .venv/bin/activate` elsewhere), not the one built from `requirements.txt`: none of
+these packages has been checked against its pins.
+
 ```bash
 # Core — light, pure Python, no compiler. Start here.
-.venv/Scripts/python.exe -m pip install fluids
+python -m pip install fluids
 ```
 
 ```bash
 # Water distribution
-.venv/Scripts/python.exe -m pip install wntr epyt viswaternet
+python -m pip install wntr epyt viswaternet
 ```
 
 ```bash
 # Stormwater and sewer
-.venv/Scripts/python.exe -m pip install pyswmm swmmio swmm-api
+python -m pip install pyswmm swmmio swmm-api
 ```
 
 ```bash
 # Groundwater, then fetch the MODFLOW executables
-.venv/Scripts/python.exe -m pip install flopy
+python -m pip install flopy
 ```
 
 ```bash
 # HEC-RAS automation — requires HEC-RAS 6.x installed separately
-.venv/Scripts/python.exe -m pip install ras-commander pyHMT2D
+python -m pip install ras-commander pyHMT2D
 ```
 
 ```bash
 # 2D free-surface solvers and visualisation
-.venv/Scripts/python.exe -m pip install anuga landlab pyvista
+python -m pip install anuga landlab pyvista
 ```
 
 ```bash
-# Heat transfer and properties — CoolProp needs a 3.12 env, not this one
-.venv/Scripts/python.exe -m pip install ht thermo
+# Heat transfer and properties. CoolProp has no Python 3.13 wheel; install it in a 3.12 env
+python -m pip install ht thermo
 ```
 
 Smallest useful first step: install `fluids`, work one Crane TP-410M fitting problem in it, and check

@@ -190,11 +190,10 @@ Two exceptions:
 - The example notebook mentions an anaStruct model of the same beam (marked "not in this
   repo"). It is not in the repo, and the notebook uses PlaneSections only. Its checks are
   against the closed form, not another package. Don't cite the anaStruct comparison as checked.
-- `PYTHON-FOR-HYDRAULICS.md` was written in an Obsidian vault. Its `[[PYTHON-FOR-THE-DESIGN-DESK]]`
-  links point to a file that is no longer in the repo; that content is now the README's "Python for
-  the Design Desk" section. Its install notes and versions describe a Windows `.venv` on Python
-  3.13, checked against PyPI on 2026-09-12, not the Python 3.11 stack `requirements.txt` was
-  tested on. Its gotchas are flagged from documentation, not reproduced. Treat every version, wheel
-  and gotcha in it as unverified until checked here.
+- `PYTHON-FOR-HYDRAULICS.md` began in an Obsidian vault; the repo copy uses GitHub Markdown and links
+  into the README instead of `[[wiki-links]]`. Its versions and wheel notes describe Python 3.13 on
+  Windows, checked against PyPI on 2026-09-12, not the Python 3.11 stack `requirements.txt` was
+  tested on, and its gotchas are flagged from documentation, not reproduced. Treat every version,
+  wheel and gotcha in it as unverified until checked here. Keep it in GitHub Markdown when editing.
 
 When referencing files, check that they exist.
