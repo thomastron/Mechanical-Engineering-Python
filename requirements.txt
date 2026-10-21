@@ -7,6 +7,10 @@
 #   GNU Octave and OpenModelica are standalone programs, not pip packages;
 #   oct2py below needs Octave on the PATH (Debian/Ubuntu: sudo apt install octave),
 #   and OMPython needs OpenModelica's omc.
+#   CalculiX (ccx) is a standalone solver too: PrePoMax bundles it on Windows,
+#   and Debian/Ubuntu package it (sudo apt install calculix-ccx).
+#   CalculiX_Validation_Checks.ipynb runs it through subprocess, so there is no
+#   Python bridge to pin.
 #   SimuPy is compared in the README but not pinned: its last release (1.1.2, 2022)
 #   fails to import on NumPy 2, and its symbolic API fails on current SymPy.
 # Linux only: openseespy also needs the system BLAS/LAPACK libraries, and gmsh
@@ -44,6 +48,10 @@ calfem-python==3.6.16
 # Solid-mechanics and electromagnetic FEA ([viz] adds PyVista; gmsh comes with EasyFEA)
 EasyFEA[viz]==7.0.0
 rapidfem==0.24.0
+
+# Mesher. EasyFEA pulls it in; pinned here because CalculiX_Validation_Checks.ipynb
+# imports it directly.
+gmsh==4.15.2
 
 # Weak-form FEA in pure Python (imports as skfem). plane_stress() changed meaning
 # in 12.0.2; read the README gotcha before moving this pin.

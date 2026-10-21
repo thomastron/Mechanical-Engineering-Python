@@ -19,6 +19,7 @@ in a traveller.
 | `MECHANICAL-DESIGN-TRAVELLER__20260816-0931.md` | Blank per-part design record template. | **Template — never fill in place.** Copy it. |
 | `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
 | `Design_Desk_Smoke_Test.ipynb` | Environment smoke test: every pinned analysis package against a known answer, installed versions against the pins. Raises if any check fails. | Re-run after any change to `requirements.txt`; commit with outputs. |
+| `CalculiX_Validation_Checks.ipynb` | CalculiX, the solver bundled with PrePoMax, driven from Python: plate-hole K_t, the shared 2 m cantilever as solids and as beams, and its Euler buckling load, each against a closed form. Needs `ccx`, which pip can't install. | Example. Re-run without `MPLBACKEND=Agg`, which strips its plots, and commit with outputs. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
 | `PYTHON-FOR-HYDRAULICS.md` | Companion survey of Python for hydraulics: pipe networks, `fluids` component sizing, open channel, stormwater, groundwater, CFD, fluid power. Nothing in it is pinned or has been run here. | Reference, not a checked map. A package from it joins the README map and `requirements.txt` only through "Adding a package to the map" below. |
 | `assets/` | Images referenced by notebooks and the README. `assets/temp` is a placeholder. | — |
@@ -90,6 +91,11 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
   `plane_stress` returns λ, μ from 12.0.2 but an equivalent (E, ν) up to 12.0.1, so check the pin
   before copying older examples. Straight-edged elements on a curved boundary cap convergence at
   O(h²) whatever the element order; run the mesh study on the governing stress.
+- **CalculiX** (`ccx`, run through `subprocess`): `CPS6` plane-stress elements are expanded into 3D wedges
+  of the section thickness, so a section thick compared with a hole gives a 3D K_t about 2% above
+  plane stress; keep it thin. `B32` beams include shear (compare with Timoshenko), are too stiff with
+  few elements, and converge at about first order; run an element study. Nodal stresses go only to
+  the `.frd` (`*NODE FILE`), and Gmsh's 10-node tet needs columns 8 and 9 swapped for `C3D10`.
 - **PathSim** defaults to a fixed-step 2nd-order solver (`SSPRK22`, dt = 0.01 s). Pass an adaptive
   solver (e.g. `Solver=RKDP54`) with `tolerance_lte_rel`/`tolerance_lte_abs`.
   `PID(f_max=...)` is in rad/s, not Hz. Its FMU blocks moved to `pathsim_fmi`.
@@ -121,6 +127,9 @@ wheels (conda-forge `fenics-dolfinx` or the `dolfinx/dolfinx` Docker image).
 a standalone program and is not in the file either; `OMPython` is, and needs OpenModelica's `omc`
 (locally, or in the `openmodelica/openmodelica` Docker image run with `--user`, since `omc` refuses
 to serve ZeroMQ as root). SimuPy is compared in the README but deliberately not pinned.
+CalculiX (`ccx`) is a standalone program and is not in the file either. PrePoMax bundles it on Windows,
+and `apt install calculix-ccx` installs it on Linux. The notebook and the smoke test find it through
+`CCX_EXE` (the executable), `PREPOMAX_HOME` (the PrePoMax folder) or `ccx` on the PATH.
 
 Every change to `requirements.txt`, a new pin or a version bump, ends the same way: a fresh venv
 from the file, `pip install -r requirements.txt`, `pip check`, and every notebook re-executed
@@ -133,11 +142,13 @@ MPLBACKEND=Agg jupyter nbconvert --to notebook --execute <notebook>.ipynb --inpl
 ```
 
 It must finish without errors and every closed-form check must print `OK`
-(the example ends with `all checks passed`). Do not commit `.venv/` or `.ipynb_checkpoints/`.
+(the example ends with `all checks passed`). `MPLBACKEND=Agg` keeps a headless run from opening
+windows, but under it `plt.show()` draws nothing, so a notebook committed with plots loses them.
+Run `CalculiX_Validation_Checks.ipynb` without it. Do not commit `.venv/` or `.ipynb_checkpoints/`.
 
 `Design_Desk_Smoke_Test.ipynb` is the environment-wide version: every pinned analysis package
 against a known answer, plus installed versions against the pins. Its last cell raises if any
-check fails, so `nbconvert` exits non-zero. Checks that need GNU Octave or OpenModelica report
+check fails, so `nbconvert` exits non-zero. Checks that need GNU Octave, OpenModelica or CalculiX report
 `SKIP`, which is not a pass: say so when you report a run. Its OpenModelica checks use a local
 `omc`, or one serving ZeroMQ at `OMC_PORT`, with `OM_WORKDIR` shared at the same path when `omc`
 runs in Docker.
