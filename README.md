@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 `requirements.txt` pins every Python package in the map below. A few entries need more than pip:
 
-- **Not pip packages.** GXBeam is a Julia package. FEniCSx has no pip wheels (see its section for conda and Docker). GNU Octave and OpenModelica are standalone programs: `oct2py` needs Octave on the PATH (Debian/Ubuntu: `sudo apt install octave`), and `OMPython` needs OpenModelica.
+- **Not pip packages.** GXBeam is a Julia package. FEniCSx has no pip wheels (see its section for conda and Docker). GNU Octave and OpenModelica are standalone programs: `oct2py` needs Octave on the PATH (Debian/Ubuntu: `sudo apt install octave`), and `OMPython` needs OpenModelica. CalculiX is a standalone solver: PrePoMax bundles it on Windows, and Debian/Ubuntu package it (`sudo apt install calculix-ccx`). See [its section](#calculix) for how the notebook finds it.
 - **System libraries on Linux.** `openseespy` needs BLAS and LAPACK, and Gmsh, the mesher behind EasyFEA and CALFEM, needs libGLU and libXft (Debian/Ubuntu: `sudo apt install libblas3 liblapack3 libglu1-mesa libxft2`).
 - **Compared, not pinned.** SimuPy, because its last release doesn't import on NumPy 2.
 
@@ -52,7 +52,9 @@ MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Cantilever_Beam_Analysi
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Design_Desk_Smoke_Test.ipynb --inplace
 ```
 
-[`Design_Desk_Smoke_Test.ipynb`](Design_Desk_Smoke_Test.ipynb) has 138 checks in its committed run. Every pinned analysis package solves a problem with a known answer (nine of them solve the same cantilever), and every installed version is compared with its pin. If a check fails, the last cell raises and the command exits non-zero. Checks that need Octave or OpenModelica report as skipped, not passed, when those programs aren't installed.
+[`Design_Desk_Smoke_Test.ipynb`](Design_Desk_Smoke_Test.ipynb) has 138 checks in its committed run. Every pinned analysis package solves a problem with a known answer (nine of them solve the same cantilever), and every installed version is compared with its pin. If a check fails, the last cell raises and the command exits non-zero. Checks that need Octave, OpenModelica or CalculiX report as skipped, not passed, when those programs aren't installed.
+
+[`CalculiX_Validation_Checks.ipynb`](CalculiX_Validation_Checks.ipynb) needs CalculiX itself. Run it without `MPLBACKEND=Agg`: under Agg, `plt.show()` has nothing to draw, so the saved notebook loses its plots.
 
 ## 5. Using it with an AI assistant
 Load these files into an AI assistant as context and point it at a textbook problem. [AGENTS.md](AGENTS.md) holds the rules it follows here, and [CLAUDE.md](CLAUDE.md) points Claude Code to the same file. The rules: frame the problem with the checklist before computing, route out any specialized regime, check every result independently, audit the Assumption Ledger against the answer, and leave sign-off to the engineer.
@@ -82,6 +84,7 @@ Hydraulics has its own map. [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md) co
 | Nonlinear and seismic structural analysis | [`openseespy`](#openseespy) |
 | 2D/3D solid FEA without writing the weak form | [`EasyFEA`](#easyfea) |
 | Weak-form FEA in pure Python, installed with pip | [`scikit-fem`](#scikit-fem) (imports as `skfem`) |
+| Solids, beams, buckling and contact from an established solver | [CalculiX](#calculix), a standalone program run from Python |
 | Weak-form FEA at scale, compiled and parallel | [FEniCSx](#fenicsx) (`dolfinx`) |
 | Full-wave electromagnetic FEA (RF, S-parameters) | [`rapidfem`](#rapidfem) |
 | Large-deflection / geometrically exact beams | [GXBeam.jl](#gxbeam) |
@@ -251,6 +254,7 @@ The FE packages in this map cover very different ground. Roughly from least setu
 | OpenSeesPy | Frames and continua | Nonlinear static and dynamic, seismic | Elements, materials, analysis steps | pip |
 | EasyFEA | 2D/3D solids, meshed with Gmsh | Elasticity, hyperelasticity, plasticity, contact, phase-field fracture, thermal, beams | Geometry, model, boundary conditions | pip |
 | scikit-fem | 1D/2D/3D; simple meshes built in, others imported | Any PDE you can write as a weak form; ships elasticity, plate (Morley, Argyris) and beam (Hermite) elements | The weak form, the mesh, the boundary conditions | pip |
+| CalculiX | 1D beams, 2D and 3D solids, shells; meshed with Gmsh or PrePoMax | Linear and nonlinear statics, buckling, natural frequencies, contact, plasticity, heat transfer | An Abaqus-style `.inp` input deck | standalone program (bundled with PrePoMax) |
 | FEniCSx | 1D/2D/3D, any mesh | Any PDE you can write as a weak form | The variational formulation | conda, Docker or WSL |
 | RapidFEM | 3D, built-in mesher | Full-wave Maxwell (RF and microwave) | Geometry, materials, ports | pip |
 
@@ -425,6 +429,28 @@ From the project's gallery, all solid mechanics:
 </table>
 
 <sub>Images: the [scikit-fem gallery](https://scikit-fem.readthedocs.io/en/latest/listofexamples.html), © scikit-fem developers, [BSD-3-Clause](https://github.com/kinnala/scikit-fem/blob/master/LICENSE). Examples 2 and 3 were rendered for this README by running the gallery's own code, unchanged, with scikit-fem 12.0.2. Example 51 is the image from the project's repository.</sub>
+
+### CalculiX
+[site](http://www.calculix.de/) · [PrePoMax](https://prepomax.fs.um.si/) · [notebook](CalculiX_Validation_Checks.ipynb)
+
+**Use for:** A general-purpose FE solver with an Abaqus-style input deck: quadratic solid elements, beams and shells (which it expands internally into solids), linear buckling, natural frequencies, contact, plasticity and heat transfer. Python writes the `.inp` file as text, runs `ccx` with `subprocess`, and parses the text results, so there is no Python binding to install. CalculiX is GPL-2.0-or-later. PrePoMax, the free Windows GUI that bundles it, is GPL-3.0. The notebook calls the solver as a separate program and ships none of its code.
+
+**Where it fits:** Reach for it when a model needs what scikit-fem and EasyFEA don't ship ready-made, such as linear buckling, contact, or beam and shell elements beside solids, all from one established solver. Meshing is separate. Gmsh builds the mesh, and two of the [gotchas](#gotchas) are in that hand-off. The deck is plain text, so a model can be diffed and reviewed like code.
+
+**Install:** a standalone program, not a pip package. On Windows, unzip PrePoMax and keep its whole `Solver` folder together, because `ccx_dynamic.exe` needs the MKL DLLs beside it. On Debian/Ubuntu, `sudo apt install calculix-ccx`. The notebook finds the solver through the `CCX_EXE` environment variable (the executable), `PREPOMAX_HOME` (the PrePoMax folder), or `ccx` on the PATH.
+
+**Checked:** CalculiX 2.22, the build bundled with PrePoMax v3.0.0, on Windows with Python 3.13. Not yet run on Linux or on the pinned Python 3.11 stack. [`CalculiX_Validation_Checks.ipynb`](CalculiX_Validation_Checks.ipynb) has seven checks, each against a closed form, at a tolerance set by its mesh study:
+- **The shared cantilever** (2 m, 50 × 50 mm, 1 kN). Quadratic tetrahedra (`C3D10`) give 25.562 mm and 40 `B32` beam elements give 25.532 mm, against 25.613 mm from Timoshenko (−0.20% and −0.31%). CalculiX's beams include shear deformation, so Timoshenko is the reference, not PL³/3EI. A short beam (L/h = 3) settles it: B32 lands on Timoshenko to 0.007% and 8.7% above Euler–Bernoulli.
+- **Linear buckling** of the same bar as a fixed-free column: 64.354 kN against Euler's 64.255 kN (Shigley Eq. 4-43, C = 1/4), 0.15% high with 40 elements.
+- **A plate with a central hole, in plane stress.** For a small hole, K_t = 3.004 against Kirsch's 3. At d/w = 0.25, K_t = 2.438 against 2.422 from the curve fit to Howland's solution (+0.63%), and against 2.45 read from Shigley's Fig. A-15-1.
+
+<p align="center">
+  <img src="assets/calculix-plate-hole-kt.png" alt="Contours of sigma_xx over sigma_0 on a 100 mm wide plate with a 25 mm central hole in tension, mirrored from a quarter model. The stress peaks at the top and bottom of the hole at K_t = 2.438 and falls below 0.3 at the hole's left and right edges" width="760">
+</p>
+
+<sub>Figure: drawn for this README by the notebook, from the CalculiX nodal stresses on the finest mesh.</sub>
+
+`Design_Desk_Smoke_Test.ipynb` repeats the beam and buckling checks when it finds `ccx`, and reports them as skipped when it doesn't.
 
 ### FEniCSx
 [tutorial](https://jsdokken.com/dolfinx-tutorial/) · [docs](https://docs.fenicsproject.org/)
@@ -838,6 +864,25 @@ Traps found while checking the packages above. Many run without an error and giv
   returns λ and μ, for `linear_elasticity(*plane_stress(E, nu))`. Either idiom on the other version
   runs without error and puts displacements out by a factor of 10¹¹ or more. That error is loud, but
   only a check catches it. `requirements.txt` pins 12.0.2.
+
+### CalculiX
+
+- **Plane-stress elements are 3D slabs.** CalculiX expands each `CPS6` into wedges of the section
+  thickness, with free faces, so a thick section gives a 3D answer, not the plane-stress one. For a
+  25 mm hole in a 100 mm plate, a 25 mm section gives K_t = 2.471, against 2.432 for a 1 mm section
+  on the same mesh (+1.6%). Set ν = 0 and the thick section gives 2.430 again. Nothing warns, and the
+  plane-stress K_t on Shigley's charts needs a section thin compared with the hole (t/r ≈ 0.1 or less).
+- **`B32` beams are too stiff with few elements, and converge at about first order.** On the 2 m
+  cantilever, 10 elements give a tip deflection 1.3% low and a buckling load 0.9% high. 40 elements
+  leave 0.31% and 0.15%. Each doubling roughly halves the error, so run an element study.
+- **`B32` includes shear deformation.** Compare it with Timoshenko, not PL³/3EI. On a slender beam
+  the difference hides inside the mesh error. On a short one (L/h = 3) it is 8.7%.
+- **Stresses go only to the `.frd` file.** `*NODE PRINT` takes `U` and `RF`. With `S` it warns
+  "label not applicable" and leaves the `.dat` empty. Use `*NODE FILE` with `S`, and parse the `.frd`
+  by its fixed 12-character fields.
+- **Gmsh's 10-node tetrahedron numbers its last two mid-edge nodes the other way round from `C3D10`.**
+  Swap columns 8 and 9 before writing the elements. With the wrong order the model still solves, but
+  the stiffness is visibly wrong.
 
 ### Time-domain simulation
 
