@@ -1,6 +1,6 @@
 # Mechanical Design Workflow
 
-A design checklist, a design-record template, and a worked Python FEA example checked against the closed-form solution.
+A design checklist, a design-record template, and a worked Python FEA example checked against the textbook answer, the closed-form solution and a second FE package.
 
 This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off.
 
@@ -20,7 +20,16 @@ There are two documents: reference material, and the working record for a part.
 
 <sub>Problem after R. C. Hibbeler, *Mechanics of Materials*, 8th ed., Example 1.1. Figure drawn for this repository.</sub>
 
-**[`Cantilever_Beam_Analysis_Triangular_Load.ipynb`](Cantilever_Beam_Analysis_Triangular_Load.ipynb)** solves this beam with the open-source PlaneSections package, which uses PyNiteFEA as its solver. It draws the shear, moment and deflection diagrams, and every result is checked against the closed form: the root reaction (1215 N), root moment (3645 N·m) and tip deflection (0.656 mm) all match.
+**[`Cantilever_Beam_Analysis_Triangular_Load.ipynb`](Cantilever_Beam_Analysis_Triangular_Load.ipynb)** solves this beam four ways and checks each against the others:
+
+- **The closed form**, derived in SymPy from the load function and checked symbolically against the textbook tables. The problem statement and theory are written in LaTeX, and each equation is cited to *Shigley's Mechanical Engineering Design* or Hibbeler's *Mechanics of Materials* by number and printed page.
+- **A hand-calculation record** in [handcalcs](#handcalcs) and pint, which shows every substitution with its units. It reproduces Hibbeler's own solution of Example 1.1.
+- **[PlaneSections](#planesections)**, which uses PyNiteFEA as its solver, with the linear load applied exactly. One four-panel figure shows the shear, moment, deflection and slope against the closed form.
+- **[anaStruct](#anastruct)**, a second FE package built separately, as the independent check.
+
+Every number lands on the textbook answer: wall reaction 1215 N, wall moment 3645 N·m (hogging), and at C a shear of 540 N and a moment of 1080 N·m (hogging). The tip deflection is 0.656 mm. The notebook ends with 29 PASS/FAIL checks, and its last cell raises if any fails. To read it as a printed calculation, open the [11 × 17 in PDF sample](Cantilever_Beam_Analysis_Triangular_Load_PDF_SAMPLE.pdf) (13 pages, typeset with LaTeX).
+
+It also writes the Assumption Ledger out, with a link to each checklist node. Euler-Bernoulli beam theory, linear elasticity and small deflection all hold by wide margins. Self-weight doesn't: the textbook neglects it, and the solid steel section this notebook assumes would weigh 17 times the load it carries. The notebook says so and shows what superposing it would change.
 
 Some packages can't apply a linearly varying load, so the taper has to be split into constant-load strips. A convergence study shows what that costs: doubling the number of strips quarters the error in the root moment, and 72 strips still leave it 0.0096% off.
 
@@ -109,7 +118,7 @@ Hydraulics has its own map. [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md) co
 ### handcalcs
 [repo](https://github.com/connorferster/handcalcs)
 
-**Use for:** Writing a calculation in Python and getting it back as rendered, step-by-step LaTeX: a hand calculation a reviewer can audit. Use `pint` for the units. The first four [gotchas](#gotchas) are about this pairing.
+**Use for:** Writing a calculation in Python and getting it back as rendered, step-by-step LaTeX: a hand calculation a reviewer can audit. Use `pint` for the units. The first five [gotchas](#gotchas) are about this pairing. The [worked example](#2-the-worked-example) uses its `@handcalc` decorator, which keeps the record's variables inside a function, so names like `L` don't overwrite the notebook's own.
 
 <div align="center">
   <img src="https://github.com/connorferster/handcalcs/raw/main/docs/images/basic_demo1.gif" alt="Handcalcs basic demo">
@@ -201,7 +210,7 @@ In one test, a notebook went from 22 letter pages to 13 on Tabloid. Swapping the
 ### anaStruct
 [docs](https://anastruct.readthedocs.io/)
 
-**Use for:** Quick 2D analysis of frames and trusses: bending moment, shear and axial force diagrams. It handles internal hinges natively, and its **forces** are exact there, but its **hinged deflections are not**. Check any deflection near a hinge independently.
+**Use for:** Quick 2D analysis of frames and trusses: bending moment, shear and axial force diagrams. It handles internal hinges natively, and its **forces** are exact there, but its **hinged deflections are not**. Check any deflection near a hinge independently. The [worked example](#2-the-worked-example) uses it as its independent check. Its signs differ from the textbook's (see [Gotchas](#beam-solvers-sign-conventions)).
 
 <table>
   <tr>
@@ -810,6 +819,12 @@ Traps found while checking the packages above. Many run without an error and giv
   underscore is illegal. MathJax (classic Jupyter, Colab) tolerates it, but **KaTeX, which VS Code
   uses, throws** `ParseError: Expected 'EOF', got '_'` and the whole cell fails to render. Write
   `# bore radius`, not `# r_i is the bore`; subscripts belong in the variable names.
+- **pint's micro prefix also breaks KaTeX.** pint writes it as the micro sign (U+00B5), so a result in
+  `microradian` renders as `\mathrm{µrad}`. KaTeX has no glyph for that character and warns, and the
+  symbol may not show. The Greek letter (U+03BC) works. Define a unit that uses it:
+  `u.define("microrad_greek = 1e-6 * radian = μrad")`. For SI units,
+  `handcalcs.set_option("preferred_string_formatter", "~L")` gives the short symbols (N, mm, MPa)
+  without any defines.
 - **`forallpeople` 3.0.0 ships no unit environments** in this build, and is SI-centric. Use `pint`
   for imperial work.
 - **`nbconvert --to webpdf` fails on Windows** with a bare `NotImplementedError` from
@@ -834,6 +849,24 @@ Traps found while checking the packages above. Many run without an error and giv
       with concurrent.futures.ThreadPoolExecutor(1) as pool:
           return pool.submit(runner).result()
   ```
+
+### Beam solvers: sign conventions
+
+Each package has its own signs, and none says so in an error. The textbooks (Shigley Fig. 3-3, Hibbeler Fig. 6-3) take a sagging moment as positive, so a cantilever's wall moment is negative. Checked on the worked example's cantilever, with planesections 1.4.2 and anaStruct 1.7.0:
+
+- **PlaneSections' `getBMD()` is hogging-positive.** It returns +3645 N·m at the wall. Negate it, and
+  pass `scale=-1` to `ps.plotMoment` to draw the diagram the textbook way up. Its shear, deflection
+  and rotation already follow the textbook's signs.
+- **PlaneSections' `getSFD()` and `getBMD()` return each node twice** (left value, right value), so
+  index 0 is the baseline, not the value at `x = 0`. Take `[1::2]`. `ps.getVertDisp()` returns
+  `(disp, x)`, displacement first; unpacking it the other way round silently gives the x coordinates.
+- **anaStruct reports reactions opposite to the loads that cause them.** A downward load gives an
+  upward reaction reported as negative.
+- **anaStruct's element shear `Q` and moment `M` are both opposite to the textbook's** for elements
+  drawn left to right, and `get_node_results_system()` gives node `uy` positive downward.
+
+Flip the signs, then compare signed values with the closed form, not magnitudes: a magnitude check
+passes a wrong sign.
 
 ### Stiffness matrices: CALFEM and MATLAB ports
 
