@@ -17,7 +17,8 @@ in a traveller.
 |---|---|---|
 | `MECHANICAL-DESIGN-CHECKLIST__20260816-0939.md` | Reference decision tree (§0–§10 + Appendices A–E). The method. | **Reference — do not edit** unless explicitly asked. |
 | `MECHANICAL-DESIGN-TRAVELLER__20260816-0931.md` | Blank per-part design record template. | **Template — never fill in place.** Copy it. |
-| `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load, PlaneSections vs closed form. | Example — pattern to imitate. |
+| `Cantilever_Beam_Analysis_Triangular_Load.ipynb` | Worked example: 9 m steel cantilever, triangular load (Hibbeler Ex. 1.1). Closed form derived in SymPy, a handcalcs record, PlaneSections, and anaStruct as the independent check; assumption ledger; 29 PASS/FAIL checks. Raises if any check fails. | Example — pattern to imitate. |
+| `Cantilever_Beam_Analysis_Triangular_Load_PDF_SAMPLE.pdf` | The example printed on 11 × 17 in through nbconvert's LaTeX route. | Generated output — don't edit. It goes stale when the notebook changes; regenerate it or say it's out of date. |
 | `Design_Desk_Smoke_Test.ipynb` | Environment smoke test: every pinned analysis package against a known answer, installed versions against the pins. Raises if any check fails. | Re-run after any change to `requirements.txt`; commit with outputs. |
 | `CalculiX_Validation_Checks.ipynb` | CalculiX, the solver bundled with PrePoMax, driven from Python: plate-hole K_t, the shared 2 m cantilever as solids and as beams, and its Euler buckling load, each against a closed form. Needs `ccx`, which pip can't install. | Example. Re-run without `MPLBACKEND=Agg`, which strips its plots, and commit with outputs. |
 | `README.md` | Human overview plus the "Python for the Design Desk" package map and gotchas. | Edit when adding files or packages. |
@@ -61,11 +62,22 @@ dates, or approvals — leave those to the engineer.
 
 Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
 
-- **State the problem, units, and sign convention in the first markdown cell.** Default to SI
+- **State the problem, units, and sign convention in the first markdown cell.** Write it as
+  Given / Find, with variables and equations in LaTeX (`$q_0$`, `$$EI\,y'' = M$$`). Default to SI
   (N, m, N·m, Pa). Comment every input with its unit: `L = 9.0  # span [m]`.
+- **Cite every equation you use** to the textbook by equation number and printed page (e.g.
+  "Shigley Eq. 3-29a, p. 114"), and check the citation in the book before writing it. Where the
+  problem comes from a textbook example, check against its published answer, not only against your
+  own closed form.
 - **Every numerical result gets an independent check** — closed form, a second package, or hand
-  calc — compared with `math.isclose(..., rel_tol=...)` and printed as OK/FAIL. A notebook
-  without a check is not finished.
+  calc — compared with `math.isclose(..., rel_tol=...)`. Collect the checks in one PASS/FAIL table
+  at the end and raise if any fails, so a headless run exits non-zero. Compare signed values: a
+  magnitude check passes a wrong sign. A notebook without a check is not finished.
+- **Show results as tables and formatted text, not raw prints.** Use pandas DataFrames for tables
+  and `IPython.display.Markdown` or `Math` for headline results. Don't use `df.style` (Styler) in a
+  notebook that may be printed to PDF through LaTeX: it carries only HTML and prints as an object name.
+- **Write the Assumption Ledger out in the notebook**, as a table that links each row to its checklist
+  node and tests it against the computed numbers (§9.6). Say so when a row fails.
 - End with a **summary table** of the governing quantities.
 - Document package API traps inline where they bite (the example's "API notes" section is the
   model).
@@ -76,11 +88,16 @@ Imitate `Cantilever_Beam_Analysis_Triangular_Load.ipynb`:
 - **planesections 1.4.2** (solver backend is now PyNiteFEA): use `ps.PyNiteAnalyzer2D`, not
   the removed `ps.OpenSeesAnalyzer2D`. `ps.SectionBasic2D` is broken — use `ps.SectionRectangle`.
   `getSFD()`/`getBMD()` return each node twice; take `[1::2]`. `ps.getVertDisp()` returns
-  `(disp, x)` — displacement first.
-- **anaStruct** forces are exact with internal hinges; **hinged deflections are not**.
+  `(disp, x)` — displacement first. `getBMD()` is hogging-positive, opposite to Shigley and
+  Hibbeler: negate it, and pass `scale=-1` to `ps.plotMoment`.
+- **anaStruct** forces are exact with internal hinges; **hinged deflections are not**. Its reactions,
+  element `Q` and element `M` are all opposite in sign to the textbook's, and node `uy` from
+  `get_node_results_system()` is positive downward.
 - **handcalcs**: no underscores or `^` in comments inside `%%render` cells (KaTeX in VS Code
   fails); define short pint units (`ksi`) or it prints canonical names; keep `%%render` cells to
-  plain assignments.
+  plain assignments. The `@handcalc` decorator keeps rendered variables inside a function, so they
+  can't overwrite the notebook's floats. pint writes micro as U+00B5, which KaTeX can't typeset:
+  define the unit with the Greek μ instead.
 - **CALFEM** (`calfem-python`, imported as `calfem`) numbers DOFs from 1 in `edof` and in the `bc`
   list for `solveq`. A 0-based list runs without error and fixes the wrong DOFs, so check the
   reactions against statics. Its `eigen` calls `eig`; use `eigh` instead (next item).
@@ -141,8 +158,8 @@ Execute a notebook headless — this is the closest thing to a test run:
 MPLBACKEND=Agg jupyter nbconvert --to notebook --execute <notebook>.ipynb --inplace
 ```
 
-It must finish without errors and every closed-form check must print `OK`
-(the example ends with `all checks passed`). `MPLBACKEND=Agg` keeps a headless run from opening
+It must finish without errors and every check must print `PASS`
+(the example ends with `29 of 29 checks pass`, and raises if any fails). `MPLBACKEND=Agg` keeps a headless run from opening
 windows, but under it `plt.show()` draws nothing, so a notebook committed with plots loses them.
 Run `CalculiX_Validation_Checks.ipynb` without it. Do not commit `.venv/` or `.ipynb_checkpoints/`.
 
@@ -198,9 +215,10 @@ Two exceptions:
 
 ## Known inconsistencies (do not propagate)
 
-- The example notebook mentions an anaStruct model of the same beam (marked "not in this
-  repo"). It is not in the repo, and the notebook uses PlaneSections only. Its checks are
-  against the closed form, not another package. Don't cite the anaStruct comparison as checked.
+- The example notebook assumes a solid 300 × 200 mm steel section, which Hibbeler's problem
+  doesn't give. Its self-weight (4.59 kN/m) is 17 times the 270 N/m load, and the notebook, like
+  the textbook, neglects it; its ledger says so. Treat the section as a vehicle for the deflection
+  numbers, not a design, and don't quote its stresses as a margin.
 - `PYTHON-FOR-HYDRAULICS.md` began in an Obsidian vault; the repo copy uses GitHub Markdown and links
   into the README instead of `[[wiki-links]]`. Its versions and wheel notes describe Python 3.13 on
   Windows, checked against PyPI on 2026-09-12, not the Python 3.11 stack `requirements.txt` was
