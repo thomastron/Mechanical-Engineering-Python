@@ -1,8 +1,12 @@
 # Mechanical Design Workflow
 
-A design checklist, a design-record template, and a worked Python FEA example checked against the textbook answer, the closed-form solution and a second FE package.
+This folder (vault) serves 2 purposes: 
+1. As a quick visual map to what Python packages are available to designers.
+2. As a starting point for any AI harness: *Download the folder, start a harness within, give it a problem, and let it not only solve the problem, but also generate detailed and educational reports.* 
 
-This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off.
+
+
+This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off. A design checklist, a design-record template, and a worked Python FEA example checked against the textbook answer, the closed-form solution and a second FE package.
 
 There is one worked example so far. The rest of this page maps [Python packages to design jobs](#python-for-the-design-desk), compares [free alternatives to MATLAB and Simulink](#matlab-and-simulink-alternatives), and lists [gotchas](#gotchas): traps that run without an error and still give a wrong answer. A separate file, [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md), surveys the same ground for pipe networks, rivers, stormwater, groundwater and fluid power.
 
