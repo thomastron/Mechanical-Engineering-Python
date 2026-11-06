@@ -1,14 +1,32 @@
 # Mechanical Design Workflow
 
-This folder (vault) serves 2 purposes: 
-1. As a quick visual map to what Python packages are available to designers.
-2. As a starting point for any AI harness: *Download the folder, start a harness within, give it a problem, and let it not only solve the problem, but also generate detailed and educational reports.* 
+This repository serves two purposes:
+1. **A quick visual map** of the Python packages available to designers: [Python for the Design Desk](#python-for-the-design-desk), below. There's nothing to install; just scroll down and read.
+2. **A starting point for any AI coding agent:** *download the repository, start an agent in it, give it a problem, and let it not only solve the problem, but also write a detailed and educational report.* [Section 3](#3-solve-your-own-problem-with-an-ai-coding-agent) shows how, step by step.
 
+**Neither needs you to write code.** For the second, the agent writes and runs the Python. Your job is to state the problem and review its answer.
 
-
-This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off. A design checklist, a design-record template, and a worked Python FEA example checked against the textbook answer, the closed-form solution and a second FE package.
+This is a proof of concept for one idea: an analysis shouldn't quietly inherit a bad assumption. It ties together a structured way to make design decisions, a written record of every assumption, and analysis in Python, with a clear path from framing the problem to sign-off. It holds a design checklist, a design-record template, and a worked Python FEA example checked against the textbook answer, the closed-form solution and a second FE package.
 
 There is one worked example so far. The rest of this page maps [Python packages to design jobs](#python-for-the-design-desk), compares [free alternatives to MATLAB and Simulink](#matlab-and-simulink-alternatives), and lists [gotchas](#gotchas): traps that run without an error and still give a wrong answer. A separate file, [Python for Hydraulics](PYTHON-FOR-HYDRAULICS.md), surveys the same ground for pipe networks, rivers, stormwater, groundwater and fluid power.
+
+## Start here
+
+| You want to | Do this | You need |
+| --- | --- | --- |
+| **Find the right Python package for a job** | Read [the map](#python-for-the-design-desk). It's organized by job, with a picture and a short example for most packages | Nothing: it's on this page |
+| **See what a finished analysis looks like** | Open the worked example's [PDF sample](Cantilever_Beam_Analysis_Triangular_Load_PDF_SAMPLE.pdf), a 13-page printed calculation | Nothing: GitHub shows the PDF in your browser |
+| **Solve your own problem** | Follow [section 3](#3-solve-your-own-problem-with-an-ai-coding-agent): download this repository, open it in an AI coding agent, and describe the problem | An AI coding agent (most need a paid subscription) and a computer you can install Python on |
+| **Run the notebooks yourself** | Follow [Setup](#5-setup), then open a notebook in Jupyter or VS Code | Python 3.11 |
+
+### Words you'll meet
+
+- **Repository** (or *repo*): a project's files and their history, hosted on GitHub. This page is the front of this one. **Download ZIP** gives you the current files as an ordinary folder, without the history.
+- **AI coding agent**: a language model run by a tool, the *harness*, that lets it read and write files in a folder on your computer and run commands there, with your approval. Claude Code, OpenAI Codex, Cursor and GitHub Copilot's agent mode are harnesses.
+- **Notebook** (`.ipynb`): a Jupyter document that mixes explanation, Python code and its saved output: equations, plots and tables. GitHub renders one as a page, so you can follow it without reading the code.
+- **Virtual environment** (*venv*): a self-contained Python installation in its own folder, holding the exact package versions pinned in `requirements.txt`, so they don't clash with anything else on your computer. The agent can create it for you.
+- **The checklist** and **the traveller**: the method this repository follows, and the record it fills in for each part. [Section 1](#1-the-design-and-analysis-framework) describes both.
+- **PASS/FAIL checks**: the table at the end of every notebook that compares each result with an independent one. If any check fails, the last cell raises an exception, so a failure can't pass unnoticed.
 
 ## 1. The design and analysis framework
 There are two documents: reference material, and the working record for a part.
@@ -37,18 +55,56 @@ It also writes the Assumption Ledger out, with a link to each checklist node. Eu
 
 Some packages can't apply a linearly varying load, so the taper has to be split into constant-load strips. A convergence study shows what that costs: doubling the number of strips quarters the error in the root moment, and 72 strips still leave it 0.0096% off.
 
-## 3. Standard workflow
-To try this on a real problem:
+## 3. Solve your own problem with an AI coding agent
+
+The agent writes the Python, runs it and writes it up. [AGENTS.md](AGENTS.md) holds the rules it follows here, and [CLAUDE.md](CLAUDE.md) imports the same file for Claude Code. The rules: frame the problem with the checklist before computing, route out any specialized regime, check every result independently, audit the Assumption Ledger against the answer, and leave sign-off to the engineer.
+
+### What you need
+
+- **An AI coding agent** that can work on a local folder, such as Claude Code (in the Claude desktop app or a terminal), OpenAI Codex, Cursor, or GitHub Copilot's agent mode in VS Code. Most need a paid subscription. A chat assistant in a web page can explain these files, but it can't execute the notebooks.
+- **Python** on your computer. If it isn't installed, the agent will tell you and walk you through installing it. The pinned packages are tested on Python 3.11.
+- No GitHub account. The repository is public, so anyone can download it.
+
+### Step by step
+
+1. **Download this repository.** At the top of this repository's page, click the green **Code** button, then **Download ZIP**. (If you use git, `git clone https://github.com/thomastron/Mechanical-Engineering-Python.git` instead, and skip step 2.)
+2. **Unzip it.** On Windows, right-click the zip file and choose **Extract All**; on a Mac, double-click it. Put the folder somewhere you'll find it again, such as Documents.
+3. **Open the folder in your agent.** Start the agent with the unzipped folder as its working directory. Claude Code loads CLAUDE.md from there automatically; Codex, Cursor and Copilot read AGENTS.md.
+4. **Ask it to set up.** For example: *"Create the virtual environment from requirements.txt, then execute the worked example and confirm all its checks pass."* The first install takes a few minutes. The agent asks before running each command: read what it's about to run, and approve only what you understand.
+5. **Give it a problem.** Type it, paste it, or attach a photo of a textbook page or a sketch, and say what you want back. For example:
+   - *"Solve this problem from Hibbeler's Mechanics of Materials two independent ways, in a new notebook."*
+   - *"A steel shelf bracket holds 50 kg, 300 mm from the wall. Is a 6 mm plate thick enough? Use the checklist and fill in a traveller."*
+   - *"Explain every step as if I'm a first-year student."*
+6. **Read what it made.** Expect these in the folder:
+   - a new notebook with the problem, the theory, each step, plots and the PASS/FAIL table;
+   - a filled-in copy of the traveller, with every assumption written down and anything it routed out;
+   - a report to read or print, if you ask for one. nbconvert exports an HTML copy that opens in any browser, with nothing more to install. A PDF like the [sample](Cantilever_Beam_Analysis_Triangular_Load_PDF_SAMPLE.pdf) goes through LaTeX (pandoc plus a TeX distribution), which the agent can help you install.
+7. **Review it.** Read the Assumption Ledger and the governing number first. Ask *why* about anything you don't follow, and ask for another method if a result looks wrong. The agent never signs anything off: that stays with the engineer.
+
+### Things to know
+
+- **You can't break anything here.** A download or clone is your own copy. Nothing you do in it reaches this repository.
+- **The agent runs commands with your user permissions.** Most harnesses ask before each one, and some can sandbox them. Work in the downloaded folder, not one that holds files you care about.
+- **The model can be wrong.** That's why every result is checked a second way and every assumption is written down. Treat its output as a calculation to review, not an answer to trust.
+- **The method covers static, linear-elastic design.** Fatigue, fracture, creep, contact, impact and the other specialized regimes are flagged at the triage gate and routed out, not quietly solved with the wrong method. The agent should tell you when that happens.
+
+## 4. Standard workflow
+To work a problem yourself, or to follow what the agent is doing:
 1. **Frame and model.** Use the checklist to set the problem's criticality, the load paths, and the right idealizations.
 2. **Compute.** Build a tractable model in a Jupyter notebook and extract the internal resultants.
 3. **Document.** Record the decisions, bounds and limits in a fresh copy of the traveller.
 4. **Audit.** Run the final numbers back through the traveller's Assumption Ledger. Check that the computed stresses and deflections don't break the linear-elastic or small-deflection assumptions you started with.
 
-## 4. Setup
-Tested on Python 3.11.
+## 5. Setup
+This is what step 4 of [section 3](#3-solve-your-own-problem-with-an-ai-coding-agent) asks the agent to do, for anyone who'd rather do it by hand. Tested on Python 3.11.
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+```
+
+Activate it (`.venv\Scripts\activate` on Windows, `source .venv/bin/activate` on macOS and Linux), then:
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -68,9 +124,6 @@ MPLBACKEND=Agg jupyter nbconvert --to notebook --execute Design_Desk_Smoke_Test.
 [`Design_Desk_Smoke_Test.ipynb`](Design_Desk_Smoke_Test.ipynb) has 138 checks in its committed run. Every pinned analysis package solves a problem with a known answer (nine of them solve the same cantilever), and every installed version is compared with its pin. If a check fails, the last cell raises and the command exits non-zero. Checks that need Octave, OpenModelica or CalculiX report as skipped, not passed, when those programs aren't installed.
 
 [`CalculiX_Validation_Checks.ipynb`](CalculiX_Validation_Checks.ipynb) needs CalculiX itself. Run it without `MPLBACKEND=Agg`: under Agg, `plt.show()` has nothing to draw, so the saved notebook loses its plots.
-
-## 5. Using it with an AI assistant
-Load these files into an AI assistant as context and point it at a textbook problem. [AGENTS.md](AGENTS.md) holds the rules it follows here, and [CLAUDE.md](CLAUDE.md) points Claude Code to the same file. The rules: frame the problem with the checklist before computing, route out any specialized regime, check every result independently, audit the Assumption Ledger against the answer, and leave sign-off to the engineer.
 
 ---
 
